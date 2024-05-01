@@ -18,6 +18,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\DBAL\TimestampType;
 use Illuminate\Support\Str;
 use App\Mail\ResetPasswordOTP;
+use Illuminate\Support\Facades\Validator;
 
 
 class AuthUserController extends Controller
@@ -25,8 +26,8 @@ class AuthUserController extends Controller
 {
     public function register(Request $request)
     {
-        // Validation and user creation code
-        $fields = $request->validate([
+        // Validation
+        $validator = Validator::make($request->all(), [
             'email' => 'required|unique:users,email|email',
             'name' => 'required|regex:/^[\x{0621}-\x{064a} A-Za-z]+$/u',
             'password' => 'required|min:8|max:32|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,32}$/',
@@ -41,37 +42,46 @@ class AuthUserController extends Controller
             'email.email' => 'email-format',
             'name.regex' => 'name-format',
         ]);
-
+    
+        // Check if the email is registered but not yet verified
+        $existingUser = User::where('email', $request->input('email'))
+                            ->whereNull('email_verified_at')
+                            ->first();
+    
+        if ($existingUser) {
+            // User email exists in the database but email_verified_at is null
+            return response()->json(['message' => 'User email exists but not verified'], 402);
+        }
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
+        // Create user
         $user = User::create([
-            'email' => $fields['email'],
-            'name' => $fields['name'],
+            'email' => $request->input('email'),
+            'name' => $request->input('name'),
             'password' => Hash::make($request->input('password')),
-            'gender' => $fields['gender'],
-            'city' => $fields['city'],
+            'gender' => $request->input('gender'),
+            'city' => $request->input('city'),
         ]);
-
+    
         // Create a verification code
-        $code = random_int(0, 9999);
-        $code = str_pad($code, 4, 0, STR_PAD_LEFT);
+        $code = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
     
         // Save the verification code to the user
         $user->verification_token = bcrypt($code);
         $user->save();
-
-        // Send verification email using SMTP
-        try {
-            Mail::to($user)->send(new VerificationMail($code));
-
-            // Response on success
-            $response = [
-                'user' => $user,
-            ];
-            return response()->json($response, 201);
-        } catch (\Exception $e) {
-            // Error handling
-            return response()->json(['message' => $e->getMessage()], 400);
-        }
+    
+        // Send verification email
+        Mail::to($user)->send(new VerificationMail($code));
+    
+        // Response on success
+        $response = [
+            'user' => $user,
+        ];
+        return response()->json($response, 201);
     }
+    
 //Done
 
 
@@ -105,7 +115,7 @@ public function verify(Request $request)
     $user->save();
 
     // Generate and return token
-    $token = $user->createToken('upTrainToken')->plainTextToken;
+    $token = $user->createToken('farmlyToken')->plainTextToken;
     $response = [
         'message' => 'Verified code successfully',
         'token' => $token,
@@ -149,39 +159,56 @@ public function resendCode(Request $request)
 
 function login(Request $request)
 {
-    $fields = $request->validate(
-        [
-            'email' => 'required|email',
-            'password' => 'required'
-        ],
-        [
-            'required' => 'field-required',
-            'email.email' => 'email-format',
-        ]
-    );
+    $fields = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required'
+    ], [
+        'required' => 'field-required',
+        'email.email' => 'email-format',
+    ]);
 
     $user = User::where('email', $fields['email'])->first();
 
-    if (!$user || !Hash::check($fields['password'], $user->password)) {
+    // Check if user exists
+    if (!$user) {
         $response = [
             'errors' => [
-                'message' => array('credentials-invalid')
+                'message' => ['credentials-invalid']
             ]
         ];
         return response($response, 400);
     }
-    $user->tokens()->delete();
-    if ($user->email_verified_at !== null) {
-        $token = $user->createToken('farmlyToken')->plainTextToken;
+
+    // Check if email is verified
+    if ($user->email_verified_at === null) {
         $response = [
-            'user' => $user,
-            'token' => $token
+            'errors' => [
+                'message' => ['email-not-verified']
+            ]
         ];
-    } else {
-        $response = [
-            'user' => $user
-        ];
+        return response($response, 402);
     }
+
+    // Check password
+    if (!Hash::check($fields['password'], $user->password)) {
+        $response = [
+            'errors' => [
+                'message' => ['credentials-invalid']
+            ]
+        ];
+        return response($response, 400);
+    }
+
+    // Delete existing tokens
+    $user->tokens()->delete();
+
+    // Create token
+    $token = $user->createToken('farmlyToken')->plainTextToken;
+
+    $response = [
+        'user' => $user,
+        'token' => $token
+    ];
 
     return response($response, 201);
 }
