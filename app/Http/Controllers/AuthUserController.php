@@ -382,6 +382,39 @@ public function updateProfile(Request $request)
 
 
 
+public function uploadPicture(Request $request)
+{
+    // Validate the request
+    $validator = Validator::make($request->all(), [
+        'picture' => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    // Get the base64 encoded picture from the request
+    $encodedPicture = $request->picture;
+
+    // Decode the base64 encoded picture
+    $decodedPicture = base64_decode($encodedPicture);
+
+    // Extract file extension from base64 string
+    $extension = '';
+    if (preg_match('/^data:image\/(\w+);base64,/', $encodedPicture, $matches)) {
+        $extension = $matches[1];
+    }
+
+    // Generate a unique file name
+    $fileName = uniqid() . '.' . $extension;
+
+    // Store the decoded picture to the storage
+    $filePath = 'pictures/' . $fileName;
+    Storage::disk('public')->put($filePath, $decodedPicture);
+
+    // Return the file path or URL
+    return response()->json(['picture_path' => $filePath], 201);
+}
 
 
 
