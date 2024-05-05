@@ -411,12 +411,16 @@ public function uploadPicture(Request $request)
     // Store the decoded picture to the storage
     $filePath = 'pictures/' . $fileName;
     Storage::disk('public')->put($filePath, $decodedPicture);
-    
+
+    // Save the file path to the database
+    // Assuming you have a 'pictures' column in your 'users' table
     auth()->user()->update(['picture' => $filePath]);
 
+ 
     // Return the file path or URL
     return response()->json(['picture_path' => $filePath], 201);
 }
+
 
 
 
