@@ -410,7 +410,7 @@ public function uploadPicture(Request $request)
     $decodedPicture = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $encodedPicture));
 
  
-    $filePath = 'pictures/' . $fileName;
+    $filePath = 'userPictures/' . $fileName;
     Storage::disk('public')->put($filePath, $decodedPicture);
 
   

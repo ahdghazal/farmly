@@ -56,6 +56,13 @@ return [
             'throw' => false,
         ],
 
+        'userPictures' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/userPictures'),
+            'url' => env('APP_URL') . '/userPictures',
+            'visibility' => 'public',
+        ],
+
     ],
 
     /*
@@ -70,7 +77,8 @@ return [
     */
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        // public_path('storage') => storage_path('app/public'),
+        public_path('userPictures') => storage_path('app/public/userPictures'),
     ],
 
 ];
