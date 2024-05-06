@@ -387,41 +387,36 @@ public function uploadPicture(Request $request)
     // Validate the request
     $validator = Validator::make($request->all(), [
         'picture' => 'required|string',
+        'picture_name' => 'required|string',
     ]);
 
     if ($validator->fails()) {
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    // Get the base64 encoded picture from the request
     $encodedPicture = $request->picture;
+    $pictureName = $request->picture_name;
 
-    // Decode the base64 encoded picture
-    $decodedPicture = base64_decode($encodedPicture);
-
-    // Extract file extension from base64 string
-    $extension = '';
-    if (preg_match('/^data:image\/(\w+);base64,/', $encodedPicture, $matches)) {
-        $extension = $matches[1];
+    $extension = pathinfo($pictureName, PATHINFO_EXTENSION);
+    if (!$extension) {
+    
+        $extension = 'jpg';
     }
 
-    // Generate a unique file name
-    $fileName = uniqid() . '.' . $extension;
+    
+    $fileName = auth()->id() . '_' . time() . '.' . $extension;
 
-    // Store the decoded picture to the storage
+  
+    $decodedPicture = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $encodedPicture));
+
+ 
     $filePath = 'pictures/' . $fileName;
     Storage::disk('public')->put($filePath, $decodedPicture);
 
-    // Save the file path to the database
-    // Assuming you have a 'pictures' column in your 'users' table
+  
     auth()->user()->update(['picture' => $filePath]);
 
- 
-    // Return the file path or URL
     return response()->json(['picture_path' => $filePath], 201);
 }
-
-
-
 
 }
