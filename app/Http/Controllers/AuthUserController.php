@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\User;
+use App\Models\FavoriteList;
 use App\Models\NotificationToken;
 use Illuminate\Support\Facades\Hash; 
 use Illuminate\Support\Facades\Auth;
