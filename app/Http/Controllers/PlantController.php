@@ -84,18 +84,19 @@ public function filterPlants(Request $request)
     {
         // Validate the request
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
+            'name' => 'unique|required|string',
             'soil_type' => 'required|string',
             'category' => 'required|string',
             'fertilization' => 'required|string',
             'pruning' => 'required|string',
-            'support' => 'required|boolean',
+            'support' => 'required|string',
             'spacing' => 'required|string',
             'season' => 'required|string',
             'water_need' => 'required|string',
             'light_needed' => 'required|string',
             'temperature' => 'required|string',
             'description' => 'required|string',
+
         ]);
 
         if ($validator->fails()) {
