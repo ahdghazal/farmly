@@ -29,6 +29,7 @@ class Plant extends Model
         'light_needed',
         'temperature',
         'description',
+        'picture',
     ];
 
     /**

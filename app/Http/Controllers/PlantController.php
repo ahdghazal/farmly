@@ -96,19 +96,16 @@ public function addPlant(Request $request)
         '*.light_needed' => 'required|string',
         '*.temperature' => 'required|string',
         '*.description' => 'required|string',
+        '*.description' => 'nullable|string',
+
     ]);
 
     if ($validator->fails()) {
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    // Initialize an empty array to store created plants
     $createdPlants = [];
-
-    // Extract validated plant data from the request
     $plantsData = $validator->validated();
-
-    // Loop through each plant data and create a new plant
     foreach ($plantsData as $plantData) {
         // Create a new plant
         $plant = Plant::create($plantData);
