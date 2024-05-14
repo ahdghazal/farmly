@@ -80,35 +80,45 @@ public function filterPlants(Request $request)
 
 
 
-    public function addPlant(Request $request)
-    {
-        // Validate the request
-        $validator = Validator::make($request->all(), [
-            'name' => 'unique|required|string',
-            'soil_type' => 'required|string',
-            'category' => 'required|string',
-            'fertilization' => 'required|string',
-            'pruning' => 'required|string',
-            'support' => 'required|string',
-            'spacing' => 'required|string',
-            'season' => 'required|string',
-            'water_need' => 'required|string',
-            'light_needed' => 'required|string',
-            'temperature' => 'required|string',
-            'description' => 'required|string',
+public function addPlant(Request $request)
+{
+    // Validate the request
+    $validator = Validator::make($request->all(), [
+        '*.name' => 'unique:plants|required|string',
+        '*.soil_type' => 'required|string',
+        '*.category' => 'required|string',
+        '*.fertilization' => 'required|string',
+        '*.pruning' => 'required|string',
+        '*.support' => 'required|string',
+        '*.spacing' => 'required|string',
+        '*.season' => 'required|string',
+        '*.water_need' => 'required|string',
+        '*.light_needed' => 'required|string',
+        '*.temperature' => 'required|string',
+        '*.description' => 'required|string',
+    ]);
 
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // Create a new plant
-        $plant = Plant::create($validator->validated());
-
-        return response()->json($plant, 201);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
 
+    // Initialize an empty array to store created plants
+    $createdPlants = [];
+
+    // Extract validated plant data from the request
+    $plantsData = $validator->validated();
+
+    // Loop through each plant data and create a new plant
+    foreach ($plantsData as $plantData) {
+        // Create a new plant
+        $plant = Plant::create($plantData);
+
+        // Add the created plant to the array
+        $createdPlants[] = $plant;
+    }
+
+    return response()->json($createdPlants, 201);
+}
 
 
 
