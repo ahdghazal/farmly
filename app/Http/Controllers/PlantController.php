@@ -96,7 +96,7 @@ public function addPlant(Request $request)
         '*.light_needed' => 'required|string',
         '*.temperature' => 'required|string',
         '*.description' => 'required|string',
-        '*.description' => 'nullable|string',
+        '*.picture' => 'nullable|string',
 
     ]);
 
