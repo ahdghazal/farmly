@@ -32,7 +32,8 @@ class AuthUserController extends Controller
             'name' => 'required|regex:/^[\x{0621}-\x{064a} A-Za-z]+$/u',
             'password' => 'required|min:8|max:32|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,32}$/',
             'gender' => 'required|alpha',
-            'city' => 'required'
+            'city' => 'required',
+            'is_admin' => 'nullable'
         ], [
             'required' => 'field-required',
             'password.min' => 'password-length',
@@ -63,6 +64,11 @@ class AuthUserController extends Controller
             'password' => Hash::make($request->input('password')),
             'gender' => $request->input('gender'),
             'city' => $request->input('city'),
+            'is_admin' => $request->input('is_admin')
+        ]);
+        
+        FavoriteList::create([
+            'user_id' => $user->id,
         ]);
     
         // Create a verification code
@@ -417,6 +423,56 @@ public function uploadPicture(Request $request)
     auth()->user()->update(['picture' => $filePath]);
 
     return response()->json(['picture_path' => $filePath], 201);
+}
+
+
+
+
+
+function adminLogin(Request $request)
+{
+    // Validate request data
+    $fields = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required'
+    ], [
+        'required' => 'field-required',
+        'email.email' => 'email-format',
+    ]);
+
+    // Attempt to authenticate the user
+    if (Auth::attempt(['email' => $fields['email'], 'password' => $fields['password'], 'is_admin' => 1])) {
+        // Check if the user's email is verified
+        if (Auth::user()->email_verified_at === null) {
+            $response = [
+                'errors' => [
+                    'message' => ['email-not-verified']
+                ]
+            ];
+            return response($response, 402);
+        }
+
+        // Delete existing tokens
+        Auth::user()->tokens()->delete();
+
+        // Create token
+        $token = Auth::user()->createToken('farmlyToken')->plainTextToken;
+
+        $response = [
+            'user' => Auth::user(),
+            'token' => $token
+        ];
+
+        return response($response, 201);
+    } else {
+        // Authentication failed
+        $response = [
+            'errors' => [
+                'message' => ['credentials-invalid']
+            ]
+        ];
+        return response($response, 400);
+    }
 }
 
 }

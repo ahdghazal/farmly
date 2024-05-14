@@ -5,45 +5,82 @@ use App\Models\Plant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class PlantController extends Controller
+class PlantController extends Controller{
+
+    public function getAllPlants(Request $request)
+    {   
+        $pageNo = $request->query('page', 1);
+    
+        $pageSize = 15;
+    
+        $plants = Plant::paginate($pageSize, ['*'], 'page', $pageNo);
+    
+        $pageCount = $plants->lastPage();
+    
+        $response = [
+            'items' => $plants->items(),
+            'page' => intval($pageNo),
+            'pages' => $pageCount 
+        ];
+    
+        return response()->json($response, 200);
+    }
+
+
+    public function searchPlantsByName(Request $request)
+    {
+        $searchQuery = $request->query('name');
+    
+        $plants = Plant::where('name', 'like', '%' . $searchQuery . '%')->paginate(15);
+    
+        $response = [
+            'items' => $plants->items(), 
+            'page' => intval($plants->currentPage()),
+            'pages' => $plants->lastPage()
+        ];
+    
+
+    return response()->json($response, 200);
+}
+
+
+public function filterPlants(Request $request)
 {
-    public function index(Request $request)
-    {
-        // Logic to fetch all plants or filter them based on request parameters
-        $plants = Plant::query();
+    $filters = $request->all();
 
-        // Filter plants by name
-        if ($request->has('name')) {
-            $plants->where('name', 'like', '%' . $request->name . '%');
+    $plantsQuery = Plant::query();
+
+    foreach ($filters as $attribute => $value) {
+        // Skip empty or non-filterable attributes
+        if (empty($value) || !in_array($attribute, ['soil_type', 'category', 'fertilization', 'spacing', 'season', 'water_need', 'light_needed', 'temperature'])) {
+            continue;
         }
 
-        // Filter plants by features
-        // Example: soil_type, category, fertilization, etc.
-        $features = ['soil_type', 'category', 'fertilization', 'pruning', 'support', 'spacing', 'season', 'water_need', 'light_needed', 'temperature'];
-        foreach ($features as $feature) {
-            if ($request->has($feature)) {
-                $plants->where($feature, $request->$feature);
-            }
-        }
-
-        // Return the filtered plants
-        return response()->json($plants->get(), 200);
+        // Apply the filter
+        $plantsQuery->where($attribute, $value);
     }
 
-    public function addToFavorites(Request $request, $plantId)
-    {
-        // Logic to add a plant to the user's favorite list
-        // You can associate the plant with the authenticated user here
-    }
+    $pageNo = $request->query('page', 1);
+    $pageSize = 15;
+    $plants = $plantsQuery->paginate($pageSize, ['*'], 'page', $pageNo);
 
-    public function addToGarden(Request $request, $plantId)
-    {
-        // Logic to add a plant to the user's garden
-        // You can associate the plant with the authenticated user's garden here
-    }
+    $response = [
+        'items' => $plants->items(),
+        'page' => intval($pageNo),
+        'pages' => $plants->lastPage()
+    ];
 
-    // Only admin can perform CRUD operations on plants
-    public function store(Request $request)
+    return response()->json($response, 200);
+}
+
+    
+
+
+
+
+
+
+    public function addPlant(Request $request)
     {
         // Validate the request
         $validator = Validator::make($request->all(), [
@@ -71,7 +108,13 @@ class PlantController extends Controller
         return response()->json($plant, 201);
     }
 
-    public function show($id)
+
+
+
+
+
+
+    public function showPlant($id)
     {
         // Logic to fetch a specific plant by ID
         $plant = Plant::findOrFail($id);
@@ -79,9 +122,12 @@ class PlantController extends Controller
         return response()->json($plant, 200);
     }
 
-    public function update(Request $request, $id)
+
+
+
+
+    public function updatePlant(Request $request, $id)
     {
-        // Validate the request
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'soil_type' => 'required|string',
@@ -108,7 +154,11 @@ class PlantController extends Controller
         return response()->json($plant, 200);
     }
 
-    public function destroy($id)
+
+    
+
+
+    public function deletePlant($id)
     {
         // Logic to delete a plant
         Plant::destroy($id);

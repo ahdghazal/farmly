@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -24,7 +26,8 @@ class User extends Authenticatable
         'gender',
         'city',
         'verification_token',
-        'picture'
+        'picture',
+        'is_admin'
     ];
 
     /**
@@ -45,4 +48,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function favoriteList(): HasOne
+    {
+        return $this->hasOne(FavoriteList::class);
+    }
 }
