@@ -27,9 +27,11 @@ class Plant extends Model
         'season',
         'water_need',
         'light_needed',
-        'temperature',
+        'min_temperature',
+        'max_temperature',
         'description',
         'picture',
+        'favorites_count',
     ];
 
     /**
@@ -45,5 +47,10 @@ class Plant extends Model
     public function favoriteLists(): BelongsToMany
     {
         return $this->belongsToMany(FavoriteList::class);
+    }
+
+    public function gardens()
+    {
+        return $this->belongsToMany(Garden::class)->withPivot('spacing')->withTimestamps();
     }
 }

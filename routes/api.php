@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthUserController;
 use App\Http\Controllers\PlantController;
 use App\Http\Controllers\FavoriteListController;
+use App\Http\Controllers\GardenController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -42,5 +44,17 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
     Route::post('/addToFavoriteList', [FavoriteListController::class, 'addToFavoriteList']);
     Route::delete('/removeFromFavoriteList', [FavoriteListController::class, 'removeFromFavoriteList']);
+    Route::get('/showFavoriteList', [FavoriteListController::class, 'showFavoriteList']);
+    Route::get('getPopularPlants', [PlantController::class, 'getPopularPlants']);
+
+
+    Route::get('/showGardens', [GardenController::class, 'showGardens']);
+    Route::post('/addGarden', [GardenController::class, 'addGarden']);
+    Route::get('/showGardenPlants/{id}', [GardenController::class, 'showGardenPlants']);
+    Route::put('/updateGarden/{id}', [GardenController::class, 'updateGarden']);
+    Route::delete('/deleteGarden/{id}', [GardenController::class, 'deleteGarden']);
+    Route::post('/addPlantToGarden', [GardenController::class, 'addPlantToGarden']);
+    Route::delete('/deletePlantFromGarden/{id}', [GardenController::class, 'deletePlantFromGarden']);
+
 
 });

@@ -1,99 +1,131 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use App\Models\Garden;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Garden;
+use App\Models\Plant;
+use Validator;
 
 class GardenController extends Controller
 {
-    public function index()
+    public function showGardens()
     {
-        // Get all gardens belonging to the authenticated user
-        $gardens = Auth::user()->gardens;
-
+        $gardens = auth()->user()->gardens()->with('plants')->get();
         return response()->json($gardens, 200);
     }
 
-    public function store(Request $request)
+    public function addGarden(Request $request)
     {
-        // Validation
+        $user = auth()->user();
+
+        if ($user->gardens()->count() >= 5) {
+            return response()->json(['message' => 'You can only have up to 5 gardens.'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
-            'size' => 'required|numeric',
+            'name' => 'required|string|unique:gardens',
             'location' => 'required|string',
+            'area' => 'required|integer',
+            'is_inside' => 'required|boolean',
+            'plants' => 'array',
+            'plants.*.id' => 'exists:plants,id',
+            'plants.*.spacing' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Create a new garden for the authenticated user
-        $garden = Garden::create([
-            'user_id' => Auth::id(),
-            'size' => $request->size,
-            'location' => $request->location,
-        ]);
+        $garden = $user->gardens()->create($request->only(['name', 'location', 'area', 'is_inside']));
 
-        return response()->json($garden, 201);
-    }
-
-    public function show($id)
-    {
-        // Fetch a specific garden by ID
-        $garden = Garden::findOrFail($id);
-
-        // Ensure the authenticated user owns this garden
-        if ($garden->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ($request->has('plants')) {
+            foreach ($request->plants as $plant) {
+                $garden->plants()->attach($plant['id'], ['spacing' => $plant['spacing']]);
+            }
         }
 
+        return response()->json($garden->load('plants'), 201);
+    }
+
+    public function showGardenPlants($id)
+    {
+        $garden = auth()->user()->gardens()->with('plants')->findOrFail($id);
         return response()->json($garden, 200);
     }
 
-    public function update(Request $request, $id)
+    public function updateGarden(Request $request, $id)
     {
-        // Fetch the garden to update
-        $garden = Garden::findOrFail($id);
+        $garden = auth()->user()->gardens()->findOrFail($id);
 
-        // Ensure the authenticated user owns this garden
-        if ($garden->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        // Validation
         $validator = Validator::make($request->all(), [
-            'size' => 'required|numeric',
+            'name' => 'required|string|unique:gardens,name,' . $id,
             'location' => 'required|string',
+            'area' => 'required|integer',
+            'is_inside' => 'required|boolean',
+            'plants' => 'array',
+            'plants.*.id' => 'exists:plants,id',
+            'plants.*.spacing' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Update the garden
-        $garden->update([
-            'size' => $request->size,
-            'location' => $request->location,
-        ]);
+        $garden->update($request->only(['name', 'location', 'area', 'is_inside']));
 
-        return response()->json($garden, 200);
-    }
-
-    public function destroy($id)
-    {
-        // Fetch the garden to delete
-        $garden = Garden::findOrFail($id);
-
-        // Ensure the authenticated user owns this garden
-        if ($garden->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ($request->has('plants')) {
+            $garden->plants()->detach();
+            foreach ($request->plants as $plant) {
+                $garden->plants()->attach($plant['id'], ['spacing' => $plant['spacing']]);
+            }
         }
 
-        // Delete the garden
+        return response()->json($garden->load('plants'), 200);
+    }
+
+    public function deleteGarden($id)
+    {
+        $garden = auth()->user()->gardens()->findOrFail($id);
         $garden->delete();
+        return response()->json(['message' => 'Garden deleted successfully.'], 200);
+    }
 
-        return response()->json(['message' => 'Garden deleted successfully'], 200);
+    public function addPlantToGarden(Request $request, $gardenId)
+    {
+        $user = auth()->user();
+        $garden = $user->gardens()->findOrFail($gardenId);
+
+        $validator = Validator::make($request->all(), [
+            'plant_id' => 'required|exists:plants,id',
+            'spacing' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $plantId = $request->input('plant_id');
+        $spacing = $request->input('spacing');
+
+        // Check if the plant is already added to the garden
+        if ($garden->plants()->where('plant_id', $plantId)->exists()) {
+            return response()->json(['message' => 'The plant is already added to the garden.'], 422);
+        }
+
+        // Attach the plant to the garden with spacing
+        $garden->plants()->attach($plantId, ['spacing' => $spacing]);
+
+        return response()->json(['message' => 'Plant added to the garden successfully.'], 201);
+    }
+
+    public function deletePlantFromGarden($gardenId, $plantId)
+    {
+        $user = auth()->user();
+        $garden = $user->gardens()->findOrFail($gardenId);
+
+        // Detach the plant from the garden
+        $garden->plants()->detach($plantId);
+
+        return response()->json(['message' => 'Plant deleted from the garden successfully.'], 200);
     }
 }
