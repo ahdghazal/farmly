@@ -44,9 +44,9 @@ class Plant extends Model
     ];
 
     // Define the relationship with FavoriteList
-    public function favoriteLists(): BelongsToMany
+    public function favoriteLists()
     {
-        return $this->belongsToMany(FavoriteList::class);
+        return $this->belongsToMany(FavoriteList::class, 'favorite_list_plant', 'plant_id', 'favorite_list_id');
     }
 
     public function gardens()

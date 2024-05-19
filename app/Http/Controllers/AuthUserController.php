@@ -34,8 +34,8 @@ class AuthUserController extends Controller
             'password' => 'required|min:8|max:32|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,32}$/',
             'gender' => 'required|alpha',
             'city' => 'required',
-            'is_admin' => 'nullable'
-        ], [
+            'is_admin' => 'nullable|boolean'
+                ], [
             'required' => 'field-required',
             'password.min' => 'password-length',
             'password.max' => 'password-length',
@@ -65,7 +65,7 @@ class AuthUserController extends Controller
             'password' => Hash::make($request->input('password')),
             'gender' => $request->input('gender'),
             'city' => $request->input('city'),
-            'is_admin' => $request->input('is_admin')
+            'is_admin' => $request->input('is_admin') ?? false 
         ]);
         
         FavoriteList::create([

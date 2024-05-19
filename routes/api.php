@@ -38,7 +38,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/uploadPicture', [AuthUserController::class, 'uploadPicture']);//done
 
     Route::get('/showPlant/{id}', [PlantController::class, 'showPlant']); //done
-    Route::get('/filterPlants', [PlantController::class, 'filterPlants']); //done
+    Route::post('/filterPlants', [PlantController::class, 'filterPlants']); //done
     Route::get('/searchPlantsByName', [PlantController::class, 'searchPlantsByName']); //done
     Route::get('/getAllPlants', [PlantController::class, 'getAllPlants']); //done
 
