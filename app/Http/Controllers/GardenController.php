@@ -23,37 +23,37 @@ class GardenController extends Controller
 
 
     public function addGarden(Request $request)
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
 
-        if ($user->gardens()->count() >= 5) {
-            return response()->json(['message' => 'You can only have up to 5 gardens.'], 403);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|unique:gardens',
-            'location' => 'required|string',
-            'area' => 'required|integer',
-            'is_inside' => 'required|boolean',
-            'plants' => 'array',
-            'plants.*.id' => 'exists:plants,id',
-            'plants.*.spacing' => 'required|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $garden = $user->gardens()->create($request->only(['name', 'location', 'area', 'is_inside']));
-
-        if ($request->has('plants')) {
-            foreach ($request->plants as $plant) {
-                $garden->plants()->attach($plant['id'], ['spacing' => $plant['spacing']]);
-            }
-        }
-
-        return response()->json($garden->load('plants'), 201);
+    if ($user->gardens()->count() >= 5) {
+        return response()->json(['message' => 'You can only have up to 5 gardens.'], 403);
     }
+
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|unique:gardens',
+        'location' => 'required|string',
+        'area' => 'required|integer',
+        'is_inside' => 'required|boolean',
+        'plants' => 'array',
+        'plants.*.id' => 'required|exists:plants,id',
+        'plants.*.spacing' => 'required|integer',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    $garden = $user->gardens()->create($request->only(['name', 'location', 'area', 'is_inside']));
+
+    if ($request->has('plants')) {
+        foreach ($request->plants as $plant) {
+            $garden->plants()->attach($plant['id'], ['spacing' => $plant['spacing']]);
+        }
+    }
+
+    return response()->json($garden->load('plants'), 201);
+}
 
 
 
@@ -120,34 +120,49 @@ class GardenController extends Controller
 
 
 
-    
-    public function addPlantToGarden(Request $request, $gardenId)
+
+    public function addPlantToGarden(Request $request)
     {
-        $user = auth()->user();
-        $garden = $user->gardens()->findOrFail($gardenId);
-
+        // Validate request data
         $validator = Validator::make($request->all(), [
+            'garden_id' => 'required|exists:gardens,id',
             'plant_id' => 'required|exists:plants,id',
-            'spacing' => 'required|integer',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
-        $plantId = $request->input('plant_id');
-        $spacing = $request->input('spacing');
-
-        // Check if the plant is already added to the garden
-        if ($garden->plants()->where('plant_id', $plantId)->exists()) {
-            return response()->json(['message' => 'The plant is already added to the garden.'], 422);
+    
+        // Retrieve garden and plant
+        $garden = Garden::findOrFail($request->input('garden_id'));
+        $plant = Plant::findOrFail($request->input('plant_id'));
+    
+        // Retrieve spacing of the plant
+        $newPlantSpacing = $plant->spacing;
+    
+        // Retrieve area of the garden
+        $gardenArea = $garden->area;
+    
+        // Calculate the total area consumed by all plants in the garden
+        $totalArea = $garden->plants()->sum('plants.spacing');
+    
+        // Calculate available space in the garden
+        $availableSpace = $gardenArea - $totalArea;
+    
+        // Check if adding the new plant exceeds the total area limit
+        if ($availableSpace >= $newPlantSpacing) {
+            // Attach the plant to the garden
+            $garden->plants()->attach($request->input('plant_id'), ['spacing' => $newPlantSpacing]);
+            return response()->json(['message' => 'Plant added to the garden successfully.'], 201);
+        } else {
+            return response()->json(['message' => 'Garden is full. Cannot add more plants.'], 422);
         }
-
-        // Attach the plant to the garden with spacing
-        $garden->plants()->attach($plantId, ['spacing' => $spacing]);
-
-        return response()->json(['message' => 'Plant added to the garden successfully.'], 201);
     }
+    
+    
+    
+
+    
 
 
 
@@ -159,14 +174,35 @@ class GardenController extends Controller
 
 
 
-    public function deletePlantFromGarden($gardenId, $plantId)
+    public function deletePlantFromGarden(Request $request)
     {
+        // Validate request data
+        $validator = Validator::make($request->all(), [
+            'garden_id' => 'required|exists:gardens,id',
+            'plant_id' => 'required|exists:plants,id',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
         $user = auth()->user();
-        $garden = $user->gardens()->findOrFail($gardenId);
-
+        $garden = $user->gardens()->find($request->input('garden_id'));
+    
+        if (!$garden) {
+            return response()->json(['message' => 'Garden not found.'], 404);
+        }
+    
+        // Check if the plant exists in the garden
+        if (!$garden->plants()->where('plant_id', $request->input('plant_id'))->exists()) {
+            return response()->json(['message' => 'Plant not found in the garden.'], 404);
+        }
+    
         // Detach the plant from the garden
-        $garden->plants()->detach($plantId);
-
+        $garden->plants()->detach($request->input('plant_id'));
+    
         return response()->json(['message' => 'Plant deleted from the garden successfully.'], 200);
     }
+    
+    
 }

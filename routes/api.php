@@ -54,7 +54,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::put('/updateGarden/{id}', [GardenController::class, 'updateGarden']);
     Route::delete('/deleteGarden/{id}', [GardenController::class, 'deleteGarden']);
     Route::post('/addPlantToGarden', [GardenController::class, 'addPlantToGarden']);
-    Route::delete('/deletePlantFromGarden/{id}', [GardenController::class, 'deletePlantFromGarden']);
+    Route::delete('/deletePlantFromGarden', [GardenController::class, 'deletePlantFromGarden']);
 
 
 });
