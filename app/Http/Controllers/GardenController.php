@@ -14,6 +14,14 @@ class GardenController extends Controller
         return response()->json($gardens, 200);
     }
 
+
+
+
+
+
+
+
+
     public function addGarden(Request $request)
     {
         $user = auth()->user();
@@ -46,6 +54,14 @@ class GardenController extends Controller
 
         return response()->json($garden->load('plants'), 201);
     }
+
+
+
+
+
+
+
+
 
     public function showGardenPlants($id)
     {
@@ -83,6 +99,13 @@ class GardenController extends Controller
         return response()->json($garden->load('plants'), 200);
     }
 
+
+
+
+
+
+
+
     public function deleteGarden($id)
     {
         $garden = auth()->user()->gardens()->findOrFail($id);
@@ -90,6 +113,14 @@ class GardenController extends Controller
         return response()->json(['message' => 'Garden deleted successfully.'], 200);
     }
 
+
+
+
+
+
+
+
+    
     public function addPlantToGarden(Request $request, $gardenId)
     {
         $user = auth()->user();
@@ -117,6 +148,16 @@ class GardenController extends Controller
 
         return response()->json(['message' => 'Plant added to the garden successfully.'], 201);
     }
+
+
+
+
+
+
+
+
+
+
 
     public function deletePlantFromGarden($gardenId, $plantId)
     {

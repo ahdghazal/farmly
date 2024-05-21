@@ -66,17 +66,27 @@ class FavoriteListController extends Controller
         return response()->json(['message' => 'Favorite list not found'], 404);
     }
 
+
+
+
+
+
     public function showFavoriteList(Request $request)
-    {
+    {   
         $user = Auth::user();
-
-        $favoriteList = $user->favoriteList;
-
-        if ($favoriteList) {
-            $plants = $favoriteList->plants;
-            return response()->json(['plants' => $plants], 200);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        return response()->json(['message' => 'Favorite list not found'], 404);
+        $favoriteList = $user->favoriteList;
+        $plants = $favoriteList->plants;
+
+        $favoritePlantIds = $plants->pluck('id')->toArray();
+        $plants->transform(function ($plant) use ($favoritePlantIds) {
+            $plant->is_favorited = in_array($plant->id, $favoritePlantIds);
+            return $plant;
+        });
+
+        return response()->json(['plants' => $plants], 200);
     }
 }
