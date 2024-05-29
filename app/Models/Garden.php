@@ -11,7 +11,13 @@ class Garden extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'location', 'area', 'is_inside', 'user_id'
+        'name', 
+        'location', // optional: a human-readable location name
+        'area',
+        'is_inside', 
+        'user_id',
+        'latitude', //added new
+        'longitude', //added new
     ];
 
     public function user(): BelongsTo

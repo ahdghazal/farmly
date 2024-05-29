@@ -70,6 +70,13 @@ return [
             'visibility' => 'public',
         ],
 
+        'postPictures' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/postPictures'),
+            'url' => env('APP_URL') . '/postPictures',
+            'visibility' => 'public',
+        ],
+
     ],
 
     /*
@@ -87,6 +94,7 @@ return [
         // public_path('storage') => storage_path('app/public'),
         public_path('userPictures') => storage_path('app/public/userPictures'),
         public_path('plantPictures') => storage_path('app/public/plantPictures'),
+        public_path('postPictures') => storage_path('app/public/postPictures'),
     ],
 
 ];

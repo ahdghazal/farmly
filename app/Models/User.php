@@ -29,7 +29,9 @@ class User extends Authenticatable
         'city',
         'verification_token',
         'picture',
-        'is_admin'
+        'is_admin',
+        'latitude',
+        'longitude'
     ];
 
     /**
