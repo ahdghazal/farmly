@@ -30,4 +30,10 @@ class Post extends Model
     {
         return $this->hasMany(SavedPost::class);
     }
+
+    public function images()
+    {
+        return $this->hasMany(PostImage::class);
+    }
+
 }

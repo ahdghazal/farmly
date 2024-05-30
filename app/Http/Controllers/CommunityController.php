@@ -9,37 +9,17 @@ use App\Models\Reply;
 use App\Models\SavedPost;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
-
+use App\Models\PostImage;
 
 class CommunityController extends Controller
 {
 
-    /*public function createPost(Request $request)
-    {
-        $request->validate([
-            'content' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
-        ]);
-
-        $postData = [
-            'user_id' => Auth::id(),
-            'content' => $request->content,
-        ];
-
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('posts_images', 'public');
-            $postData['image_path'] = $imagePath;
-        }
-
-        $post = Post::create($postData);
-
-        return response()->json($post, 201);
-    }*/
     public function createPost(Request $request)
     {
         $request->validate([
             'content' => 'required|string',
-            'image' => 'nullable|string', 
+            'images' => 'nullable|array',
+            'images.*' => 'nullable|string', // Validate base64-encoded image strings
         ]);
 
         $userId = Auth::id();
@@ -49,28 +29,44 @@ class CommunityController extends Controller
             'content' => $request->content,
         ];
 
-        if ($request->has('image')) {
-            $imageData = $request->image;
-            $imagePath = $this->saveBase64Image($imageData, $userId);
-            $postData['image_path'] = $imagePath;
-        }
-
         $post = Post::create($postData);
 
-        return response()->json($post, 201);
+        if ($request->has('images')) {
+            foreach ($request->images as $imageData) {
+                $imagePath = $this->saveBase64Image($imageData, $userId);
+                PostImage::create([
+                    'post_id' => $post->id,
+                    'image_path' => $imagePath,
+                ]);
+            }
+        }
+
+        return response()->json($post->load('images'), 201);
     }
 
     private function saveBase64Image($imageData, $userId)
     {
         $decodedImage = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageData));
-
-        $fileName = $userId . '_' . time() . '_' . uniqid() . '.png'; 
-
+        $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
         $filePath = 'postPictures/' . $fileName;
         file_put_contents(public_path($filePath), $decodedImage);
-
         return $filePath;
     }
+
+    
+    public function searchPosts(Request $request)
+    {
+        $request->validate(['query' => 'required|string']);
+
+        $query = $request->query('query');
+        $posts = Post::with(['user', 'likes', 'replies.user', 'images'])
+                    ->where('content', 'LIKE', '%' . $query . '%')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+        return response()->json($posts, 200);
+    }
+
 
 
 
