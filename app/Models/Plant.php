@@ -51,6 +51,6 @@ class Plant extends Model
 
     public function gardens()
     {
-        return $this->belongsToMany(Garden::class)->withPivot('spacing')->withTimestamps();
+        return $this->belongsToMany(Garden::class)->withPivot('spacing', 'quantity')->withTimestamps();
     }
 }

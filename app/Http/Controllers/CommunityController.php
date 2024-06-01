@@ -10,27 +10,34 @@ use App\Models\SavedPost;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
 use App\Models\PostImage;
+use Illuminate\Support\Facades\Storage;
+
 
 class CommunityController extends Controller
 {
-
+   
     public function createPost(Request $request)
     {
         $request->validate([
-            'content' => 'required|string',
-            'images' => 'nullable|array',
+            'content' => 'nullable|string',
+            'images' => 'nullable|array|max:4', // Limit to 4 images
             'images.*' => 'nullable|string', // Validate base64-encoded image strings
         ]);
-
+    
+        // Ensure at least one of content or images is provided
+        if (!$request->filled('content') && !$request->has('images')) {
+            return response()->json(['error' => 'Post cannot be empty.'], 422);
+        }
+    
         $userId = Auth::id();
-
+    
         $postData = [
             'user_id' => $userId,
             'content' => $request->content,
         ];
-
+    
         $post = Post::create($postData);
-
+    
         if ($request->has('images')) {
             foreach ($request->images as $imageData) {
                 $imagePath = $this->saveBase64Image($imageData, $userId);
@@ -40,9 +47,10 @@ class CommunityController extends Controller
                 ]);
             }
         }
-
+    
         return response()->json($post->load('images'), 201);
     }
+    
 
     private function saveBase64Image($imageData, $userId)
     {
@@ -53,73 +61,71 @@ class CommunityController extends Controller
         return $filePath;
     }
 
-    
     public function searchPosts(Request $request)
     {
         $request->validate(['query' => 'required|string']);
 
         $query = $request->query('query');
         $posts = Post::with(['user', 'likes', 'replies.user', 'images'])
-                    ->where('content', 'LIKE', '%' . $query . '%')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+            ->where('content', 'LIKE', '%' . $query . '%')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $posts->each(function ($post) {
+            $post->is_liked_by_user = $post->likes->contains('user_id', Auth::id());
+            $post->is_saved_by_user = $post->savedPosts->contains('user_id', Auth::id());
+        });
 
         return response()->json($posts, 200);
     }
 
-
-
-
-public function getPosts(Request $request)
-{
-    $sort = $request->query('sort', 'recent');
-    $user = $request->query('user');
-    
-    $query = Post::with(['user', 'likes', 'replies.user']);
-    
-    if ($user) {
-        $query->whereHas('user', function ($q) use ($user) {
-            $q->where('name', $user);
+    public function getPosts(Request $request)
+    {
+        $sort = $request->query('sort', 'recent');
+        $user = $request->query('user');
+        
+        $query = Post::with(['user', 'likes', 'replies.user', 'images']);
+        
+        if ($user) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('name', $user);
+            });
+        }
+        
+        if ($sort == 'most_liked') {
+            $query->withCount('likes')->orderBy('likes_count', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+        
+        $posts = $query->get();
+        
+        $posts->each(function ($post) {
+            $post->is_liked_by_user = $post->likes->contains('user_id', Auth::id());
+            $post->is_saved_by_user = $post->savedPosts->contains('user_id', Auth::id());
         });
+        
+        return response()->json($posts, 200);
     }
-    
-    if ($sort == 'most_liked') {
-        $query->withCount('likes')->orderBy('likes_count', 'desc');
-    } else {
-        $query->orderBy('created_at', 'desc');
-    }
-    
-    $posts = $query->get();
-    
-    return response()->json($posts, 200);
-}
-    
 
-
-
-
-
-public function likePost($postId)
-{
-    $like = Like::firstOrCreate([
-        'user_id' => Auth::id(),
-        'post_id' => $postId,
-    ]);
-
-    $post = Post::find($postId);
-    if ($post->user_id !== Auth::id()) {
-        Notification::create([
-            'user_id' => $post->user_id,
-            'type' => 'like',
-            'data' => 'Your post was liked by ' . Auth::user()->name,
+    public function likePost($postId)
+    {
+        $like = Like::firstOrCreate([
+            'user_id' => Auth::id(),
+            'post_id' => $postId,
         ]);
+
+        $post = Post::find($postId);
+        if ($post->user_id !== Auth::id()) {
+            Notification::create([
+                'user_id' => $post->user_id,
+                'type' => 'like',
+                'data' => 'Your post was liked by ' . Auth::user()->name,
+            ]);
+        }
+
+        return response()->json($like, 200);
     }
-
-    return response()->json($like, 200);
-}
-
-
-
 
     public function unlikePost($postId)
     {
@@ -135,9 +141,6 @@ public function likePost($postId)
         return response()->json(null, 204);
     }
 
-
-
-
     public function savePost($postId)
     {
         $savedPost = SavedPost::firstOrCreate([
@@ -147,10 +150,6 @@ public function likePost($postId)
 
         return response()->json($savedPost, 200);
     }
-
-
-
-
 
     public function unsavePost($postId)
     {
@@ -166,53 +165,44 @@ public function likePost($postId)
         return response()->json(null, 204);
     }
 
-
-
-
     public function replyToPost(Request $request, $postId)
-{
-    $request->validate([
-        'content' => 'required|string',
-    ]);
-
-    $reply = Reply::create([
-        'user_id' => Auth::id(),
-        'post_id' => $postId,
-        'content' => $request->content,
-    ]);
-
-    $post = Post::find($postId);
-    if ($post->user_id !== Auth::id()) {
-        Notification::create([
-            'user_id' => $post->user_id,
-            'type' => 'reply',
-            'data' => 'Your post received a reply from ' . Auth::user()->name,
+    {
+        $request->validate([
+            'content' => 'required|string',
         ]);
+
+        $reply = Reply::create([
+            'user_id' => Auth::id(),
+            'post_id' => $postId,
+            'content' => $request->content,
+        ]);
+
+        $post = Post::find($postId);
+        if ($post->user_id !== Auth::id()) {
+            Notification::create([
+                'user_id' => $post->user_id,
+                'type' => 'reply',
+                'data' => 'Your post received a reply from ' . Auth::user()->name,
+            ]);
+        }
+
+        return response()->json($reply->load('user'), 201);
     }
 
-    return response()->json($reply, 201);
-}
-
-
-
-        public function deleteReply($replyId)
-        {
+    public function deleteReply($replyId)
+    {
         $reply = Reply::where('id', $replyId)->where('user_id', Auth::id())->first();
         if ($reply) {
             $reply->delete();
             return response()->json(null, 204);
         }
 
-    return response()->json(['error' => 'Reply not found or you are not authorized to delete this reply'], 404);    
+        return response()->json(['error' => 'Reply not found or you are not authorized to delete this reply'], 404);    
     }
 
-
-
-
-
-        public function getSavedPosts()
+    public function getSavedPosts()
     {
-        $savedPosts = SavedPost::with('post.user', 'post.likes', 'post.replies.user')
+        $savedPosts = SavedPost::with('post.user', 'post.likes', 'post.replies.user', 'post.images')
             ->where('user_id', Auth::id())
             ->get()
             ->pluck('post');
@@ -221,5 +211,26 @@ public function likePost($postId)
     }
 
 
+    public function deletePost($postId)
+{
+    $post = Post::find($postId);
+
+    if (!$post) {
+        return response()->json(['error' => 'Post not found'], 404);
+    }
+
+    if ($post->user_id !== Auth::id()) {
+        return response()->json(['error' => 'You are not authorized to delete this post'], 403);
+    }
+
+    foreach ($post->images as $image) {
+        $image->delete();
+        Storage::disk('public')->delete($image->image_path);
+    }
+
+    $post->delete();
+
+    return response()->json(null, 204);
+}
 
 }

@@ -27,6 +27,13 @@ class Garden extends Model
 
     public function plants(): BelongsToMany
     {
-        return $this->belongsToMany(Plant::class)->withPivot('spacing')->withTimestamps();
+        return $this->belongsToMany(Plant::class)->withPivot('spacing', 'quantity')->withTimestamps();
     }
+
+    public function plantEntries()
+    {
+        return $this->hasMany(GardenPlantEntry::class);
+    }
+
+
 }

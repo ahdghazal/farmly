@@ -73,6 +73,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::delete('/deleteReply/{replyId}', [CommunityController::class, 'deleteReply']);
     Route::get('/getSavedPosts', [CommunityController::class, 'getSavedPosts']);
     Route::get('/searchPosts', [CommunityController::class, 'searchPosts']);
+    Route::delete('/deletePost/{postId}', [CommunityController::class, 'deletePost']);
 
     Route::get('/notifications', [NotificationsController::class, 'getNotifications']);
     Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead']);
