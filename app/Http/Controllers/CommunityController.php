@@ -233,4 +233,30 @@ class CommunityController extends Controller
     return response()->json(null, 204);
 }
 
+
+public function getMyPosts(Request $request)
+{
+    $userId = Auth::id();
+    $sort = $request->query('sort', 'latest');
+
+    $query = Post::with(['user', 'likes', 'replies.user', 'images'])
+                ->where('user_id', $userId);
+
+    if ($sort === 'earliest') {
+        $query->orderBy('created_at', 'asc');
+    } else {
+        $query->orderBy('created_at', 'desc');
+    }
+
+    $posts = $query->get();
+
+    $posts->each(function ($post) {
+        $post->is_liked_by_user = $post->likes->contains('user_id', Auth::id());
+        $post->is_saved_by_user = $post->savedPosts->contains('user_id', Auth::id());
+    });
+
+    return response()->json($posts, 200);
+}
+
+
 }

@@ -64,6 +64,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
 
     Route::get('/getPosts', [CommunityController::class, 'getPosts']);
+    Route::get('/getMyPosts', [CommunityController::class, 'getMyPosts']);
     Route::post('/createPost', [CommunityController::class, 'createPost']);
     Route::post('/likePost/{postId}', [CommunityController::class, 'likePost']);
     Route::post('/unlikePost/{postId}', [CommunityController::class, 'unlikePost']);
@@ -75,9 +76,12 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::get('/searchPosts', [CommunityController::class, 'searchPosts']);
     Route::delete('/deletePost/{postId}', [CommunityController::class, 'deletePost']);
 
+
     Route::get('/notifications', [NotificationsController::class, 'getNotifications']);
     Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead']);
 
+
+    
     Route::post('/messages', [ChatController::class, 'sendMessage']);
     Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
 

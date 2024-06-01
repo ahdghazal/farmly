@@ -76,17 +76,13 @@ class AuthUserController extends Controller
             'user_id' => $user->id,
         ]);
     
-        // Create a verification code
         $code = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
     
-        // Save the verification code to the user
         $user->verification_token = bcrypt($code);
         $user->save();
     
-        // Send verification email
         Mail::to($user)->send(new VerificationMail($code));
     
-        // Response on success
         $response = [
             'user' => $user,
         ];
@@ -111,7 +107,6 @@ public function verify(Request $request)
     // Fetch user
     $user = User::where('email', $request->email)->first();
 
-    // Check verification code
     if (!Hash::check($request->code, $user->verification_token)) {
         $response = [
             'errors' => [
@@ -121,11 +116,9 @@ public function verify(Request $request)
         return response($response, 400);
     }
 
-    // Update user verification status
     $user->email_verified_at = Carbon::now()->toDateTimeString();
     $user->save();
 
-    // Generate and return token
     $token = $user->createToken('farmlyToken')->plainTextToken;
     $response = [
         'message' => 'Verified code successfully',
@@ -138,30 +131,24 @@ public function verify(Request $request)
 
 public function resendCode(Request $request)
 {
-    // Fetch user
     $user = User::where('email', $request->email)->first();
 
-    // Generate new verification code
     $code = random_int(0, 9999);
     $code = str_pad($code, 4, 0, STR_PAD_LEFT);
     $user->verification_token = bcrypt($code);
     $user->save();
 
-    // Send verification email using Gmail SMTP
     try {
-        // Use the Gmail SMTP settings
         Mail::send('email.verification', ['code' => $code], function($message) use ($user) {
             $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
             $message->to($user->email, $user->name)->subject('Verify Your Email');
         });
 
-        // Response on success
         $response = [
             'message' => 'success-email'
         ];
         return response($response, 201);
     } catch (\Exception $e) {
-        // Error handling
         return response()->json(['message' => $e->getMessage()], 400);
     }
 }
@@ -180,7 +167,6 @@ function login(Request $request)
 
     $user = User::where('email', $fields['email'])->first();
 
-    // Check if user exists
     if (!$user) {
         $response = [
             'errors' => [
@@ -190,7 +176,6 @@ function login(Request $request)
         return response($response, 400);
     }
 
-    // Check if email is verified
     if ($user->email_verified_at === null) {
         $response = [
             'errors' => [
@@ -200,7 +185,6 @@ function login(Request $request)
         return response($response, 402);
     }
 
-    // Check password
     if (!Hash::check($fields['password'], $user->password)) {
         $response = [
             'errors' => [
@@ -210,10 +194,8 @@ function login(Request $request)
         return response($response, 400);
     }
 
-    // Delete existing tokens
     $user->tokens()->delete();
 
-    // Create token
     $token = $user->createToken('farmlyToken')->plainTextToken;
 
     $response = [
@@ -353,7 +335,7 @@ public function resetPassword(Request $request)
 
 public function showProfile()
 {
-    $user = auth()->user(); // Get the authenticated user
+    $user = auth()->user();
 
     return response()->json(['user' => $user], 200);
 }
@@ -364,7 +346,7 @@ public function showProfile()
 
 public function updateProfile(Request $request)
 {
-    $user = auth()->user(); // Get the authenticated user
+    $user = auth()->user();
 
     $fields = $request->validate([
         'name' => 'nullable|regex:/^[\x{0621}-\x{064a} A-Za-z]+$/u',
@@ -375,7 +357,6 @@ public function updateProfile(Request $request)
         'gender.in' => 'invalid-gender',
     ]);
 
-    // Update user's profile
     if (isset($fields['name'])) {
         $user->name = $fields['name'];
     }
@@ -386,7 +367,6 @@ public function updateProfile(Request $request)
         $user->city = $fields['city'];
     }
     $user->save();
-    // Return updated user data
     return response()->json(['user' => $user, 'message' => 'Profile updated successfully'], 200);
 }
 
@@ -395,7 +375,6 @@ public function updateProfile(Request $request)
 
 public function uploadPicture(Request $request)
 {
-    // Validate the request
     $validator = Validator::make($request->all(), [
         'picture' => 'required|string',
         'picture_name' => 'required|string',
@@ -445,7 +424,6 @@ function adminLogin(Request $request)
         'email.email' => 'email-format',
     ]);
 
-    // Attempt to authenticate the user
     if (Auth::attempt(['email' => $fields['email'], 'password' => $fields['password'], 'is_admin' => 1])) {
         // Check if the user's email is verified
         if (Auth::user()->email_verified_at === null) {
