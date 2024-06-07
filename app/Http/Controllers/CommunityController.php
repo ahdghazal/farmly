@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\Like;
 use App\Models\Reply;
+use App\Models\Report;
 use App\Models\SavedPost;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
@@ -258,5 +259,34 @@ public function getMyPosts(Request $request)
     return response()->json($posts, 200);
 }
 
+public function reportPost(Request $request, $postId)
+{
+    $post = Post::findOrFail($postId);
 
+    // Check if the user has already reported this post
+    $alreadyReported = $post->reports()->where('user_id', Auth::id())->exists();
+    if ($alreadyReported) {
+        return response()->json(['error' => 'Post already reported by the user.'], 422);
+    }
+
+    // Create a new report for the post
+    $report = new Report();
+    $report->post_id = $postId;
+    $report->user_id = Auth::id();
+    $report->save();
+
+    // Check if the post has received more than 20 reports
+    $reportsCount = $post->reports()->count();
+    if ($reportsCount >= 20) {
+        // Notify the admin
+        $adminId = 1; // Assuming the admin user ID is 1
+        $notification = new Notification();
+        $notification->user_id = $adminId;
+        $notification->type = 'post_reported';
+        $notification->data = 'Post ID ' . $postId . ' has received more than 20 reports. Please review.';
+        $notification->save();
+    }
+
+    return response()->json(['message' => 'Post reported successfully.'], 200);
+}
 }

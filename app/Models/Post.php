@@ -36,4 +36,10 @@ class Post extends Model
         return $this->hasMany(PostImage::class);
     }
 
+public function reports()
+{
+    return $this->hasMany(Report::class);
+}
+
+
 }

@@ -154,51 +154,6 @@ class PlantController extends Controller{
 
 
 
-
-
-public function addPlant(Request $request)
-{
-    // Validate the request
-    $validator = Validator::make($request->all(), [
-        '*.name' => 'unique:plants|required|string',
-        '*.soil_type' => 'required|string',
-        '*.category' => 'required|string',
-        '*.fertilization' => 'required|string',
-        '*.pruning' => 'required|string',
-        '*.support' => 'required|string',
-        '*.spacing' => 'required|numeric',
-        '*.season' => 'required|string',
-        '*.water_need' => 'required|string',
-        '*.light_needed' => 'required|string',
-        '*.min_temperature' => 'required|integer',
-        '*.max_temperature' => 'required|integer',
-        '*.description' => 'required|string',
-        '*.picture' => 'nullable|string',
-
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-
-    $createdPlants = [];
-    $plantsData = $validator->validated();
-    foreach ($plantsData as $plantData) {
-        // Create a new plant
-        $plant = Plant::create($plantData);
-
-        // Add the created plant to the array
-        $createdPlants[] = $plant;
-    }
-
-    return response()->json($createdPlants, 201);
-}
-
-
-
-
-
-
     public function showPlant($id)
     {
         // Logic to fetch a specific plant by ID
@@ -211,36 +166,7 @@ public function addPlant(Request $request)
 
 
 
-    public function updatePlant(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
-            'soil_type' => 'required|string',
-            'category' => 'required|string',
-            'fertilization' => 'required|string',
-            'pruning' => 'required|string',
-            'support' => 'required|boolean',
-            'spacing' => 'required|numeric',
-            'season' => 'required|string',
-            'water_need' => 'required|string',
-            'light_needed' => 'required|string',
-            'min_temperature' => 'required|integer',
-            'max_temperature' => 'required|integer',
-            'description' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // Update the plant
-        $plant = Plant::findOrFail($id);
-        $plant->update($validator->validated());
-
-        return response()->json($plant, 200);
-    }
-
-
+    
     public function getPopularPlants()
     {
         $user = Auth::user();
@@ -270,17 +196,5 @@ public function addPlant(Request $request)
         return response()->json(['popular_plants' => $popularPlants], 200);
     }
     
-
-
-
-    public function deletePlant($id)
-    {
-        // Logic to delete a plant
-        Plant::destroy($id);
-
-        return response()->json(['message' => 'Plant deleted successfully'], 200);
-    }
-
-
 
 }
