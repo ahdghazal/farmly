@@ -28,14 +28,14 @@ use App\Http\Controllers\AdminController;
 
 
 Route::post('/admin/login', [AdminController::class, 'adminLogin']); //done
+Route::post('/admin/change-password', [AdminController::class, 'changePassword']); //done
+Route::post('/admin/send-reset-password-otp', [AdminController::class, 'sendResetPasswordOTP']); //done
 
 Route::middleware(['auth', 'admin'])->group(function () {
     // Authentication routes
     Route::post('/admin/logout', [AdminController::class, 'logout']); //done
     
     // Profile routes
-    Route::post('/admin/change-password', [AdminController::class, 'changePassword']); //done
-    Route::post('/admin/send-reset-password-otp', [AdminController::class, 'sendResetPasswordOTP']); //done
     Route::post('/admin/reset-password', [AdminController::class, 'resetPassword']); //done
     Route::get('/admin/showProfile', [AdminController::class, 'showProfile']); //done
     Route::put('/admin/updateProfile', [AdminController::class, 'updateProfile']); //done
