@@ -40,10 +40,9 @@ class Plant extends Model
      * @var array
      */
     protected $casts = [
-        'support' => 'boolean', // Convert 'support' field to boolean
+        'support' => 'boolean',
     ];
 
-    // Define the relationship with FavoriteList
     public function favoriteLists()
     {
         return $this->belongsToMany(FavoriteList::class, 'favorite_list_plant', 'plant_id', 'favorite_list_id');

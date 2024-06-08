@@ -23,8 +23,7 @@ class SendPlantReminders extends Command
 
         foreach ($gardens as $garden) {
             foreach ($garden->plants as $plant) {
-                // Check watering needs
-                $lastWatered = $plant->pivot->updated_at; // Assuming last watered time is updated in pivot table
+                $lastWatered = $plant->pivot->updated_at;
                 $waterNeed = strtolower($plant->water_need);
                 $nextWaterDate = null;
 
@@ -40,12 +39,9 @@ class SendPlantReminders extends Command
                         break;
                 }
 
-                // Send reminder if due
                 if ($nextWaterDate && $nextWaterDate->isToday()) {
-                    // Logic to send reminder (e.g., email)
                 }
 
-                // Check pruning needs
                 $pruningNeed = strtolower($plant->pruning);
                 $nextPruneDate = null;
 
@@ -61,9 +57,7 @@ class SendPlantReminders extends Command
                         break;
                 }
 
-                // Send reminder if due
                 if ($nextPruneDate && $nextPruneDate->isToday()) {
-                    // Logic to send reminder (e.g., email)
                 }
             }
         }

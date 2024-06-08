@@ -49,7 +49,7 @@ class GardenController extends Controller
             foreach ($request->plants as $plant) {
                 $garden->plantEntries()->create([
                     'plant_id' => $plant['id'],
-                    'quantity' => 1, // Default quantity
+                    'quantity' => 1,
                 ]);
             }
         }
@@ -119,11 +119,11 @@ class GardenController extends Controller
         $garden->update($request->only(['name', 'location', 'area', 'is_inside']));
 
         if ($request->has('plants')) {
-            $garden->plantEntries()->delete(); // Remove all existing entries
+            $garden->plantEntries()->delete();
             foreach ($request->plants as $plant) {
                 $garden->plantEntries()->create([
                     'plant_id' => $plant['id'],
-                    'quantity' => 1, // Default quantity
+                    'quantity' => 1,
                 ]);
             }
         }

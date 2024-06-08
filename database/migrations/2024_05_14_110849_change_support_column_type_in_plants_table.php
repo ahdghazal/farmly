@@ -14,7 +14,6 @@ return new class extends Migration
     public function up()
     {
         Schema::table('plants', function (Blueprint $table) {
-            // Add a new string column
             $table->string('support')->change();
         });
     }
@@ -27,7 +26,6 @@ return new class extends Migration
     public function down()
     {
         Schema::table('plants', function (Blueprint $table) {
-            // Add back the boolean column
             $table->boolean('support')->change();
         });
     }

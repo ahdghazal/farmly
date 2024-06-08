@@ -27,7 +27,6 @@ class AuthUserController extends Controller
 {
     public function register(Request $request)
     {
-        // Validation
         $validator = Validator::make($request->all(), [
             'email' => 'required|unique:users,email|email',
             'name' => 'required|regex:/^[\x{0621}-\x{064a} A-Za-z]+$/u',
@@ -47,20 +46,17 @@ class AuthUserController extends Controller
             'name.regex' => 'name-format',
         ]);
     
-        // Check if the email is registered but not yet verified
         $existingUser = User::where('email', $request->input('email'))
                             ->whereNull('email_verified_at')
                             ->first();
     
         if ($existingUser) {
-            // User email exists in the database but email_verified_at is null
             return response()->json(['message' => 'User email exists but not verified'], 402);
         }
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
     
-        // Create user
         $user = User::create([
             'email' => $request->input('email'),
             'name' => $request->input('name'),
@@ -94,7 +90,6 @@ class AuthUserController extends Controller
 
 public function verify(Request $request)
 {
-    // Validation
     $fields = $request->validate([
         'code' => 'required|size:4|regex:/^\d{4}$/',
         'email' => 'required|email',
@@ -104,7 +99,6 @@ public function verify(Request $request)
         'code.regex' => 'invalid-token',
     ]);
 
-    // Fetch user
     $user = User::where('email', $request->email)->first();
 
     if (!Hash::check($request->code, $user->verification_token)) {
@@ -285,18 +279,15 @@ public function sendResetPasswordOTP(Request $request)
 
     $user = User::where('email', $fields['email'])->first();
 
-    // Generate and save OTP
     $otp = Str::random(4);
     $user->otp = bcrypt($otp);
     $user->save();
 
-    // Send the OTP to the user's email
     try {
         Mail::to($user->email)->send(new ResetPasswordOTP($otp, $user->name));
 
         return response()->json(['message' => 'OTP sent to your email'], 200);
     } catch (\Exception $e) {
-        // Error handling
         return response()->json(['error' => 'Failed to send OTP'], 500);
     }
 }
@@ -317,14 +308,12 @@ public function resetPassword(Request $request)
 
     $user = User::where('email', $fields['email'])->first();
 
-    // Check if OTP matches
     if (!Hash::check($fields['otp'], $user->otp)) {
         return response()->json(['error' => 'Invalid OTP'], 400);
     }
 
-    // Reset password
     $user->password = Hash::make($fields['password']);
-    $user->otp = null; // Clear OTP after successful reset
+    $user->otp = null;
     $user->save();
 
     return response()->json(['message' => 'Password reset successfully'], 200);

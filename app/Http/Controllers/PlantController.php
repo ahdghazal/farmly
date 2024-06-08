@@ -156,7 +156,6 @@ class PlantController extends Controller{
 
     public function showPlant($id)
     {
-        // Logic to fetch a specific plant by ID
         $plant = Plant::findOrFail($id);
 
         return response()->json($plant, 200);
@@ -175,19 +174,16 @@ class PlantController extends Controller{
             $favoritePlants = $user->favoriteList ? $user->favoriteList->plants->pluck('id')->toArray() : [];
         }
     
-        // Get 15 plants with the highest favorite count
         $popularPlants = Plant::orderBy('favorites_count', 'desc')
                              ->take(15)
                              ->get();
     
-        // If there are less than 15 popular plants, fill the remaining with random plants
         if ($popularPlants->count() < 15) {
             $remainingCount = 15 - $popularPlants->count();
             $randomPlants = Plant::where('favorites_count', '=', 0)->inRandomOrder()->take($remainingCount)->get();
             $popularPlants = $popularPlants->merge($randomPlants);
         }
     
-        // Add is_favorited flag to each plant
         $popularPlants->transform(function ($plant) use ($favoritePlants) {
             $plant->is_favorited = in_array($plant->id, $favoritePlants);
             return $plant;

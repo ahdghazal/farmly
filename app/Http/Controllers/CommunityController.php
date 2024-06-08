@@ -21,11 +21,10 @@ class CommunityController extends Controller
     {
         $request->validate([
             'content' => 'nullable|string',
-            'images' => 'nullable|array|max:4', // Limit to 4 images
-            'images.*' => 'nullable|string', // Validate base64-encoded image strings
+            'images' => 'nullable|array|max:4',
+            'images.*' => 'nullable|string',
         ]);
     
-        // Ensure at least one of content or images is provided
         if (!$request->filled('content') && !$request->has('images')) {
             return response()->json(['error' => 'Post cannot be empty.'], 422);
         }
@@ -263,23 +262,19 @@ public function reportPost(Request $request, $postId)
 {
     $post = Post::findOrFail($postId);
 
-    // Check if the user has already reported this post
     $alreadyReported = $post->reports()->where('user_id', Auth::id())->exists();
     if ($alreadyReported) {
         return response()->json(['error' => 'Post already reported by the user.'], 422);
     }
 
-    // Create a new report for the post
     $report = new Report();
     $report->post_id = $postId;
     $report->user_id = Auth::id();
     $report->save();
 
-    // Check if the post has received more than 20 reports
     $reportsCount = $post->reports()->count();
     if ($reportsCount >= 20) {
-        // Notify the admin
-        $adminId = 1; // Assuming the admin user ID is 1
+        $adminId = 1;
         $notification = new Notification();
         $notification->user_id = $adminId;
         $notification->type = 'post_reported';

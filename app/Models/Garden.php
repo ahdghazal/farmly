@@ -12,12 +12,12 @@ class Garden extends Model
 
     protected $fillable = [
         'name', 
-        'location', // optional: a human-readable location name
+        'location',
         'area',
         'is_inside', 
         'user_id',
-        'latitude', //added new
-        'longitude', //added new
+        'latitude',
+        'longitude', 
     ];
 
     public function user(): BelongsTo

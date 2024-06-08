@@ -12,7 +12,7 @@ class WeatherController extends Controller
 
     public function __construct()
     {
-        $this->apiKey = config('services.weather.api_key'); // Store API key in config/services.php
+        $this->apiKey = config('services.weather.api_key');
     }
 
     public function getUserWeather(Request $request)
@@ -45,7 +45,7 @@ class WeatherController extends Controller
             'lat' => $latitude,
             'lon' => $longitude,
             'appid' => $this->apiKey,
-            'units' => 'metric' // Change units as necessary
+            'units' => 'metric'
         ]);
 
         if ($response->successful()) {

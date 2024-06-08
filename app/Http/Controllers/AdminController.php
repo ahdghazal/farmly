@@ -129,18 +129,15 @@ class AdminController extends Controller
 
         $user = User::where('email', $fields['email'])->first();
 
-        // Generate and save OTP
         $otp = Str::random(4);
         $user->otp = bcrypt($otp);
         $user->save();
 
-        // Send the OTP to the user's email
         try {
             Mail::to($user->email)->send(new ResetPasswordOTP($otp, $user->name));
 
             return response()->json(['message' => 'OTP sent to your email'], 200);
         } catch (\Exception $e) {
-            // Error handling
             return response()->json(['error' => 'Failed to send OTP'], 500);
         }
     }
@@ -160,14 +157,12 @@ class AdminController extends Controller
 
         $user = User::where('email', $fields['email'])->first();
 
-        // Check if OTP matches
         if (!Hash::check($fields['otp'], $user->otp)) {
             return response()->json(['error' => 'Invalid OTP'], 400);
         }
 
-        // Reset password
         $user->password = Hash::make($fields['password']);
-        $user->otp = null; // Clear OTP after successful reset
+        $user->otp = null;
         $user->save();
 
         return response()->json(['message' => 'Password reset successfully'], 200);
@@ -241,7 +236,6 @@ class AdminController extends Controller
 
     public function getAllUsers()
     {
-        // Retrieve all users excluding the password column
         $users = User::select('id', 'name', 'email', 'gender', 'city', 'is_admin', 'email_verified_at', 'created_at', 'updated_at')->get();
     
         return response()->json($users, 200);
@@ -268,7 +262,6 @@ public function deletePost($id)
         return response()->json(['error' => 'Post not found'], 404);
     }
 
-    // Assuming you have images associated with the post
     foreach ($post->images as $image) {
         Storage::disk('public')->delete($image->image_path);
         $image->delete();
@@ -343,14 +336,12 @@ public function addPost(Request $request)
     $data = $request->validate([
         'title' => 'required|string',
         'content' => 'required|string',
-        // Add other fields as necessary
     ]);
 
     $post = Post::create([
-        'user_id' => auth()->id(), // Assuming admin is logged in
+        'user_id' => auth()->id(),
         'title' => $data['title'],
         'content' => $data['content'],
-        // Add other fields as necessary
     ]);
 
     return response()->json($post, 201);
@@ -377,11 +368,10 @@ public function addAnnouncement(Request $request)
     {
         $request->validate([
             'content' => 'nullable|string',
-            'images' => 'nullable|array|max:4', // Limit to 4 images
-            'images.*' => 'nullable|string', // Validate base64-encoded image strings
+            'images' => 'nullable|array|max:4',
+            'images.*' => 'nullable|string',
         ]);
 
-        // Ensure at least one of content or images is provided
         if (!$request->filled('content') && !$request->has('images')) {
             return response()->json(['error' => 'Post cannot be empty.'], 422);
         }
@@ -423,7 +413,6 @@ public function addAnnouncement(Request $request)
         return response()->json($announcements, 200);
     }
 
-    // Update an announcement
     public function updateAnnouncement(Request $request, $id)
     {
         $request->validate([
@@ -440,7 +429,6 @@ public function addAnnouncement(Request $request)
         return response()->json($announcement, 200);
     }
 
-    // Delete an announcement
     public function deleteAnnouncement($id)
     {
         $announcement = Announcement::findOrFail($id);
@@ -459,13 +447,12 @@ public function addAnnouncement(Request $request)
     }
     
 
-    // Update an admin post
     public function updateAdminPost(Request $request, $id)
     {
         $request->validate([
             'content' => 'nullable|string',
-            'images' => 'nullable|array|max:4', // Limit to 4 images
-            'images.*' => 'nullable|string', // Validate base64-encoded image strings
+            'images' => 'nullable|array|max:4',
+            'images.*' => 'nullable|string',
         ]);
 
         $post = Post::findOrFail($id);
@@ -473,7 +460,6 @@ public function addAnnouncement(Request $request)
             'content' => $request->content,
         ]);
 
-        // Delete old images if new ones are provided
         if ($request->has('images')) {
             foreach ($post->images as $image) {
                 $image->delete();
@@ -492,7 +478,6 @@ public function addAnnouncement(Request $request)
         return response()->json($post->load('images'), 200);
     }
 
-    // Delete an admin post
     public function deleteAdminPost($id)
     {
         $post = Post::findOrFail($id);
@@ -509,12 +494,10 @@ public function addAnnouncement(Request $request)
 
     public function getTopFavoritedPlants()
     {
-        // Get 15 plants with the highest favorite count
         $popularPlants = Plant::orderBy('favorites_count', 'desc')
                              ->take(15)
                              ->get();
 
-        // If there are less than 15 popular plants, fill the remaining with random plants
         if ($popularPlants->count() < 15) {
             $remainingCount = 15 - $popularPlants->count();
             $randomPlants =Plant::where('favorites_count', '=', 0)->inRandomOrder()->take($remainingCount)->get();
@@ -544,7 +527,6 @@ public function addAnnouncement(Request $request)
 
     public function addPlant(Request $request)
 {
-    // Validate the request
     $validator = Validator::make($request->all(), [
         '*.name' => 'unique:plants|required|string',
         '*.soil_type' => 'required|string',
@@ -570,10 +552,8 @@ public function addAnnouncement(Request $request)
     $createdPlants = [];
     $plantsData = $validator->validated();
     foreach ($plantsData as $plantData) {
-        // Create a new plant
         $plant = Plant::create($plantData);
 
-        // Add the created plant to the array
         $createdPlants[] = $plant;
     }
 
@@ -602,7 +582,6 @@ public function updatePlant(Request $request, $id)
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Update the plant
         $plant = Plant::findOrFail($id);
         $plant->update($validator->validated());
 
@@ -612,7 +591,6 @@ public function updatePlant(Request $request, $id)
 
     public function deletePlant($id)
     {
-        // Logic to delete a plant
         Plant::destroy($id);
 
         return response()->json(['message' => 'Plant deleted successfully'], 200);
@@ -620,7 +598,6 @@ public function updatePlant(Request $request, $id)
 
     public function showPlant($id)
     {
-        // Logic to fetch a specific plant by ID
         $plant = Plant::findOrFail($id);
 
         return response()->json($plant, 200);
