@@ -125,10 +125,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/users', [AdminController::class, 'getAllUsers']); //done
 
     // Plants operations
-    Route::post('/addPlant', [AdminController::class, 'addPlant']); //done
-    Route::put('/updatePlant/{id}', [AdminController::class, 'updatePlant']); //done
-    Route::get('/showPlant/{id}', [AdminController::class, 'showPlant']); //done
-    Route::post('/deletePlant/{id}', [AdminController::class, 'deletePlant']); //done
+    Route::post('/admin/addPlant', [AdminController::class, 'addPlant']); //done
+    Route::put('/admin/updatePlant/{id}', [AdminController::class, 'updatePlant']); //done
+    Route::get('/admin/showPlant/{id}', [AdminController::class, 'showPlant']); //done
+    Route::post('/admin/deletePlant/{id}', [AdminController::class, 'deletePlant']); //done
 
     // Post and announcement routes
     Route::post('/admin/adminAddPost', [AdminController::class, 'createAdminPost']);//done
