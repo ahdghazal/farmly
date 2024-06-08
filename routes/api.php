@@ -10,6 +10,8 @@ use App\Http\Controllers\GardenController;
 use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\AdminController;
+
 
 /*
 |--------------------------------------------------------------------------
