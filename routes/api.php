@@ -23,9 +23,9 @@ use App\Http\Controllers\AdminController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::post('/admin/change-password', [AdminController::class, 'changePassword']); //done
 Route::post('/admin/send-reset-password-otp', [AdminController::class, 'sendResetPasswordOTP']); //done
 Route::post('/admin/login', [AdminController::class, 'adminLogin']); //done
+Route::post('/admin/reset-password', [AdminController::class, 'resetPassword']); //done
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -102,7 +102,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/logout', [AdminController::class, 'logout']); //done
     
     // Profile routes
-    Route::post('/admin/reset-password', [AdminController::class, 'resetPassword']); //done
+    Route::post('/admin/change-password', [AdminController::class, 'changePassword']); //done
     Route::get('/admin/showProfile', [AdminController::class, 'showProfile']); //done
     Route::put('/admin/updateProfile', [AdminController::class, 'updateProfile']); //done
     Route::post('/admin/upload-picture', [AdminController::class, 'uploadPicture']); //done
