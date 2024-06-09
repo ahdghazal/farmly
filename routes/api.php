@@ -106,7 +106,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
-    Route::get('/admin/test', function () {
+    Route::get('/admin/test', function (Request $request) {
         Log::info('User Authenticated:', [auth()->user()]);
         return response()->json(['message' => 'Authenticated']);
     });
