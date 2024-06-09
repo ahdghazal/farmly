@@ -11,7 +11,8 @@ use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\AdminController;
-
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\MessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,14 +91,20 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead']);
 
 
-    
-    Route::post('/messages', [ChatController::class, 'sendMessage']);
-    Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
+    //for app user side chat implementation
 
+    Route::get('conversations', [ConversationController::class, 'index']);
+    Route::post('conversations', [ConversationController::class, 'store']);
+    Route::get('conversations/{id}', [ConversationController::class, 'show']);
+    Route::delete('conversations/{id}', [ConversationController::class, 'destroy']);
 
+    Route::post('conversations/{conversationId}/messages', [MessageController::class, 'store']);
+    Route::patch('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
+    Route::delete('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
+    Route::patch('conversations/{conversationId}/messages/{messageId}/read', [MessageController::class, 'markAsRead']);
 });
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Authentication routes
     Route::post('/admin/logout', [AdminController::class, 'logout']); //done
     
@@ -141,6 +148,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/deleteAnnouncement/{id}', [AdminController::class, 'deleteAnnouncement']);//done
 
     Route::get('/admin/reports', [AdminController::class, 'viewReports']);//done
+    //for web admin dashboard chat implementation
+    Route::get('admin/conversations', [ConversationController::class, 'index']);
+    Route::post('admin/conversation', [ConversationController::class, 'store']);
+    Route::get('admin/conversations/{id}', [ConversationController::class, 'show']);
+    Route::delete('admin/conversations/{id}', [ConversationController::class, 'destroy']);
+
+    Route::post('admin/conversations/{conversationId}/messages', [MessageController::class, 'store']);
+    Route::patch('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
+    Route::delete('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
+    Route::patch('admin/conversations/{conversationId}/messages/{messageId}/read', [MessageController::class, 'markAsRead']);
 
 
 });

@@ -20,6 +20,5 @@ class AdminMiddleware
             return $next($request);
         }
 
-        return redirect('/');
-    }
+        return response()->json(['message' => 'Unauthorized.'], 403);    }
 }
