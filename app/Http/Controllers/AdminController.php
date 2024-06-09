@@ -51,7 +51,7 @@ class AdminController extends Controller
 
         Auth::user()->tokens()->delete();
 
-        $token = user()->createToken('farmlyToken')->plainTextToken;
+        $token = Auth::user()->createToken('farmlyToken')->plainTextToken;
 
         $response = [
             'user' => Auth::user(),
@@ -171,11 +171,7 @@ class AdminController extends Controller
     public function showProfile()
     {
         $user = auth()->user();
-    if (!$user) {
-        Log::info('Unauthenticated user tried to access profile');
-        return response()->json(['message' => 'Unauthenticated.'], 401);
-    }
-    return response()->json(['user' => $user], 200);
+        return response()->json(['user' => $user], 200);
     }
 
     public function updateProfile(Request $request)
