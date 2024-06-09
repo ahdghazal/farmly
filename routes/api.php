@@ -105,6 +105,11 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+
+    Route::get('/admin/test', function () {
+        Log::info('User Authenticated:', [auth()->user()]);
+        return response()->json(['message' => 'Authenticated']);
+    });
     // Authentication routes
     Route::post('/admin/logout', [AdminController::class, 'logout']); //done
     
