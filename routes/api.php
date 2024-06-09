@@ -3,6 +3,7 @@
 namespace App\Models;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\AuthUserController;
 use App\Http\Controllers\PlantController;
 use App\Http\Controllers\FavoriteListController;
@@ -105,11 +106,6 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-
-    Route::get('/admin/test', function (Request $request) {
-        Log::info('User Authenticated:', [auth()->user()]);
-        return response()->json(['message' => 'Authenticated']);
-    });
     // Authentication routes
     Route::post('/admin/logout', [AdminController::class, 'logout']); //done
     
