@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http;
-
+use Fruitcake\Cors\HandleCors;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
