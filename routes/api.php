@@ -155,6 +155,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/conversations/{id}', [ConversationController::class, 'show']);
     Route::delete('admin/conversations/{id}', [ConversationController::class, 'destroy']);
 
+    Route::post('/admin/uploadPlantPicture', [AdminController::class, 'uploadPlantPicture']);//done
+
     Route::post('admin/conversations/{conversationId}/messages', [MessageController::class, 'store']);
     Route::patch('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
     Route::delete('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
