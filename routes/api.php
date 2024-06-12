@@ -137,10 +137,11 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/updatePlant/{id}', [AdminController::class, 'updatePlant']); //done
     Route::get('/admin/showPlant/{id}', [AdminController::class, 'showPlant']); //done
     Route::post('/admin/deletePlant/{id}', [AdminController::class, 'deletePlant']); //done
+    Route::post('/admin/uploadPlantPicture', [AdminController::class, 'uploadPlantPicture']);//done
 
     // Post and announcement routes
     Route::post('/admin/adminAddPost', [AdminController::class, 'createAdminPost']);//done
-    Route::get('/admin/posts', [AdminController::class, 'getAllAdminPosts']);//done
+    Route::get('/admin/getAllAdminPosts', [AdminController::class, 'getAllAdminPosts']);//done
     Route::put('/admin/updateAdminPosts/{id}', [AdminController::class, 'updateAdminPost']);//done
 
     Route::post('/admin/addAnnouncement', [AdminController::class, 'addAnnouncement']);//done
@@ -155,7 +156,6 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/conversations/{id}', [ConversationController::class, 'show']);
     Route::delete('admin/conversations/{id}', [ConversationController::class, 'destroy']);
 
-    Route::post('/admin/uploadPlantPicture', [AdminController::class, 'uploadPlantPicture']);//done
 
     Route::post('admin/conversations/{conversationId}/messages', [MessageController::class, 'store']);
     Route::patch('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
