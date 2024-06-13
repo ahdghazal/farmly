@@ -8,11 +8,12 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageSent implements ShouldBroadcast
+class MessageRead implements ShouldBroadcast
 {
-    use InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
 
@@ -26,8 +27,8 @@ class MessageSent implements ShouldBroadcast
         return new PrivateChannel('chat.' . $this->message->conversation_id);
     }
 
-    public function broadcastWith()
+    public function broadcastAs()
     {
-        return ['message' => $this->message->load('sender')];
+        return 'message-read';
     }
 }

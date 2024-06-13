@@ -20,6 +20,8 @@ use Illuminate\Database\DBAL\TimestampType;
 use Illuminate\Support\Str;
 use App\Mail\ResetPasswordOTP;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Conversation;
+use App\Events\UserVerified;
 
 
 class AuthUserController extends Controller
@@ -90,6 +92,7 @@ class AuthUserController extends Controller
 
 public function verify(Request $request)
 {
+    // Validate request fields
     $fields = $request->validate([
         'code' => 'required|size:4|regex:/^\d{4}$/',
         'email' => 'required|email',
@@ -99,9 +102,11 @@ public function verify(Request $request)
         'code.regex' => 'invalid-token',
     ]);
 
+    // Fetch the user by email
     $user = User::where('email', $request->email)->first();
 
-    if (!Hash::check($request->code, $user->verification_token)) {
+    // Verify if user exists and token matches
+    if (!$user || !Hash::check($request->code, $user->verification_token)) {
         $response = [
             'errors' => [
                 'message' => ['invalid-token']
@@ -110,18 +115,35 @@ public function verify(Request $request)
         return response($response, 400);
     }
 
+    // Update email_verified_at for the user
     $user->email_verified_at = Carbon::now()->toDateTimeString();
     $user->save();
 
+    // Generate API token for the user
     $token = $user->createToken('farmlyToken')->plainTextToken;
+
+    // If user is not admin, create default conversation
+    if (!$user->is_admin) {
+        $admin = User::where('is_admin', true)->first();
+
+        if ($admin) {
+            Conversation::firstOrCreate([
+                'user1_id' => $user->id,
+                'user2_id' => $admin->id,
+            ]);
+        }
+    }
+
+    // Prepare response
     $response = [
         'message' => 'Verified code successfully',
         'token' => $token,
         'user' => $user,
     ];
+
     return response($response, 201);
 }
-//Done
+
 
 public function resendCode(Request $request)
 {

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -6,6 +7,8 @@ use App\Models\Message;
 use App\Models\Conversation;
 use Illuminate\Support\Facades\Auth;
 use Pusher\Pusher;
+use App\Events\MessageSent;
+use App\Events\MessageRead;
 
 class MessageController extends Controller
 {
@@ -25,7 +28,7 @@ class MessageController extends Controller
             'is_read' => false,
         ]);
 
-        $this->broadcastMessage($message);
+        broadcast(new MessageSent($message))->toOthers();
 
         return response()->json($message->load('sender'), 201);
     }
@@ -41,7 +44,7 @@ class MessageController extends Controller
         $message->message = $request->message;
         $message->save();
 
-        $this->broadcastMessage($message);
+        $this->broadcastMessage($message, 'message-updated');
 
         return response()->json($message, 200);
     }
@@ -65,15 +68,19 @@ class MessageController extends Controller
         $message = Message::where('conversation_id', $conversationId)
             ->where('id', $messageId)
             ->firstOrFail();
-
+    
         if ($message->conversation->user1_id == Auth::id() || $message->conversation->user2_id == Auth::id()) {
             $message->is_read = true;
             $message->save();
+    
+            broadcast(new MessageRead($message))->toOthers();
+    
             return response()->json($message, 200);
         }
-
+    
         return response()->json(['error' => 'Unauthorized'], 403);
     }
+    
 
     protected function broadcastMessage(Message $message, $event = 'message-sent')
     {

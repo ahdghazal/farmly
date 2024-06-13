@@ -94,10 +94,8 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
     //for app user side chat implementation
 
-    Route::get('conversations', [ConversationController::class, 'index']);
-    Route::post('conversations', [ConversationController::class, 'store']);
-    Route::get('conversations/{id}', [ConversationController::class, 'show']);
-    Route::delete('conversations/{id}', [ConversationController::class, 'destroy']);
+    Route::get('user-conversation', [ConversationController::class, 'showUserConversation']);
+;
 
     Route::post('conversations/{conversationId}/messages', [MessageController::class, 'store']);
     Route::patch('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
@@ -161,15 +159,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::get('/admin/reports', [AdminController::class, 'viewReports']);//done
     //for web admin dashboard chat implementation
-    Route::get('admin/conversations', [ConversationController::class, 'index']);
-    Route::post('admin/conversation', [ConversationController::class, 'store']);
-    Route::get('admin/conversations/{id}', [ConversationController::class, 'show']);
-    Route::delete('admin/conversations/{id}', [ConversationController::class, 'destroy']);
+    Route::get('admin/conversations', [ConversationController::class, 'index']);//done
+    Route::post('admin/conversation', [ConversationController::class, 'store']);//done
+    Route::get('admin/conversations/{id}', [ConversationController::class, 'show']);//done
+    Route::delete('admin/delete-conversation/{id}', [ConversationController::class, 'destroy']);//done
 
 
-    Route::post('admin/conversations/{conversationId}/messages', [MessageController::class, 'store']);
-    Route::patch('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
-    Route::delete('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
+    Route::post('admin/conversations/{conversationId}/messages', [MessageController::class, 'store']);//done
+    Route::patch('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);//done
+    Route::delete('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);//done
     Route::patch('admin/conversations/{conversationId}/messages/{messageId}/read', [MessageController::class, 'markAsRead']);
 
 

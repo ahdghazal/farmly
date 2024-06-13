@@ -65,4 +65,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Garden::class);
     }
+
+    public function isAdmin()
+    {
+        return $this->is_admin;
+    }
 }

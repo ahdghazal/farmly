@@ -247,6 +247,7 @@ class AdminController extends Controller
     public function getAllUsers()
     {
         $users = User::select('id', 'name', 'email', 'gender', 'city', 'is_admin', 'email_verified_at', 'created_at', 'updated_at','picture')
+            ->whereNotNull('email_verified_at')
             ->withCount([
                 'gardens',
                 'posts',
