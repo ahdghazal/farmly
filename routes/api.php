@@ -152,6 +152,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/admin/getAnnouncements', [AdminController::class, 'getAllAnnouncements']);//done
     Route::put('/admin/updateAnnouncement/{id}', [AdminController::class, 'updateAnnouncement']);//done
     Route::delete('/admin/deleteAnnouncement/{id}', [AdminController::class, 'deleteAnnouncement']);//done
+    
+    //searching
+    Route::get('/admin/searchUsersByName', [AdminController::class, 'searchUsersByName']);//done
+    Route::get('/admin/searchPlantsByName', [AdminController::class, 'searchPlantsByName']);//done
+    Route::get('/admin/searchPostsByContent', [AdminController::class, 'searchPostsByContent']);//done
+
 
     Route::get('/admin/reports', [AdminController::class, 'viewReports']);//done
     //for web admin dashboard chat implementation

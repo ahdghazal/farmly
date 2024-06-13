@@ -246,7 +246,7 @@ class AdminController extends Controller
 
     public function getAllUsers()
     {
-        $users = User::select('id', 'name', 'email', 'gender', 'city', 'is_admin', 'email_verified_at', 'created_at', 'updated_at')
+        $users = User::select('id', 'name', 'email', 'gender', 'city', 'is_admin', 'email_verified_at', 'created_at', 'updated_at','picture')
             ->withCount([
                 'gardens',
                 'posts',
@@ -353,14 +353,6 @@ public function getPlants()
     return response()->json($plants);
 }
 
-public function getPosts()
-{
-    $posts = Post::with(['user'])
-        ->withCount(['likes', 'replies'])
-        ->get();
-
-    return response()->json($posts, 200);
-}
 
 public function addPost(Request $request)
 {
@@ -467,16 +459,35 @@ public function addAnnouncement(Request $request)
 
         return response()->json(null, 204);
     }
+
+    public function getPosts()
+{
+    $posts = Post::with(['user','likes', 'replies.user', 'images'])
+        ->withCount(['likes', 'replies'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return response()->json($posts, 200);
+}
+
+
     public function getAllAdminPosts()
     {
-        $adminPosts = Post::with('user', 'images')
+        $adminPosts = Post::with('user','likes', 'replies.user', 'images')
                             ->whereHas('user', function ($query) {
                                 $query->where('is_admin', 1);
                             })
+                            ->withCount(['likes', 'replies'])
+                            ->orderBy('created_at', 'desc')
                             ->get();
         return response()->json($adminPosts, 200);
     }
     
+    public function viewReports()
+    {
+        $reports = Report::with('post','post.images')->get();
+        return response()->json(['reports' => $reports], 200);
+    }
 
     public function updateAdminPost(Request $request, $id)
     {
@@ -542,17 +553,26 @@ public function addAnnouncement(Request $request)
         $topLocations = Garden::select('location', DB::raw('COUNT(*) as garden_count'))
             ->groupBy('location')
             ->orderByDesc('garden_count')
-            ->limit(3)
+            ->limit(4)
             ->get();
-
+    
+        $totalGardensCount = Garden::count();
+    
+        $topLocationsCount = $topLocations->sum('garden_count');
+        $othersCount = $totalGardensCount - $topLocationsCount;
+    
+        if ($othersCount > 0) {
+            $topLocations->push((object)[
+                'location' => 'Others',
+                'garden_count' => $othersCount
+            ]);
+        }
+    
         return response()->json(['top_locations' => $topLocations], 200);
     }
+    
 
-    public function viewReports()
-    {
-        $reports = Report::with('post')->get();
-        return response()->json(['reports' => $reports], 200);
-    }
+   
 
 
 
@@ -695,6 +715,57 @@ public function getTopUserLocations()
             'user_count' => $otherLocationsCount
         ]);
     }
+
+    return response()->json($response, 200);
+}
+
+
+
+public function searchUsersByName(Request $request)
+{
+    $searchQuery = $request->query('name');
+    $users = User::where('name', 'like', '%' . $searchQuery . '%')
+        ->select('id', 'name', 'email', 'gender', 'city', 'is_admin', 'email_verified_at', 'created_at', 'updated_at', 'picture')
+        ->paginate(15);
+
+    $response = [
+        'items' => $users->items(),
+        'page' => intval($users->currentPage()),
+        'pages' => $users->lastPage()
+    ];
+
+    return response()->json($response, 200);
+}
+
+public function searchPlantsByName(Request $request)
+{
+    $searchQuery = $request->query('name');
+    $plants = Plant::where('name', 'like', '%' . $searchQuery . '%')->paginate(15);
+
+    $response = [
+        'items' => $plants->items(),
+        'page' => intval($plants->currentPage()),
+        'pages' => $plants->lastPage()
+    ];
+
+    return response()->json($response, 200);
+}
+
+public function searchPostsByContent(Request $request)
+{
+    $request->validate(['query' => 'required|string']);
+
+    $query = $request->query('query');
+    $posts = Post::with(['user', 'likes', 'replies.user', 'images'])
+        ->where('content', 'LIKE', '%' . $query . '%')
+        ->orderBy('created_at', 'desc')
+        ->paginate(15);
+
+    $response = [
+        'items' => $posts->items(),
+        'page' => intval($posts->currentPage()),
+        'pages' => $posts->lastPage()
+    ];
 
     return response()->json($response, 200);
 }
