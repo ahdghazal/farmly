@@ -231,12 +231,41 @@ class AdminController extends Controller
         return response()->json(['picture_path' => $filePath], 201);
     }
 
+    public function getAllGardens()
+    {
+        $gardens = Garden::with(['user:id,name,email'])
+                         ->withCount('plantEntries')
+                         ->get(['id', 'name', 'location', 'area', 'is_inside', 'user_id', 'plant_entries_count']);
+    
+        return response()->json($gardens, 200);
+    }
+    
+    
+
 
 
     public function getAllUsers()
     {
-        $users = User::select('id', 'name', 'email', 'gender', 'city', 'is_admin', 'email_verified_at', 'created_at', 'updated_at')->get();
-    
+        $users = User::select('id', 'name', 'email', 'gender', 'city', 'is_admin', 'email_verified_at', 'created_at', 'updated_at')
+            ->withCount([
+                'gardens',
+                'posts',
+                'favoriteList as favorite_plants_count' => function ($query) {
+                    $query->select(\DB::raw('count(plants.id)'))
+                          ->join('favorite_list_plant', 'favorite_lists.id', '=', 'favorite_list_plant.favorite_list_id')
+                          ->join('plants', 'plants.id', '=', 'favorite_list_plant.plant_id');
+                }
+            ])
+            ->with(['gardens' => function($query) {
+                $query->withCount('plants');
+            }])
+            ->get()
+            ->map(function ($user) {
+                $user->total_plants_count = $user->gardens->sum('plants_count');
+                unset($user->gardens);
+                return $user;
+            });
+
         return response()->json($users, 200);
     }
     
@@ -326,7 +355,10 @@ public function getPlants()
 
 public function getPosts()
 {
-    $posts = Post::with('user')->get();
+    $posts = Post::with(['user'])
+        ->withCount(['likes', 'replies'])
+        ->get();
+
     return response()->json($posts, 200);
 }
 
@@ -637,6 +669,34 @@ public function updatePlant(Request $request, $id)
     auth()->user()->update(['picture' => $filePath]);
 
     return response()->json(['picture_path' => $filePath], 201);
+}
+
+public function getTopUserLocations()
+{
+    $usersByCity = User::selectRaw('city, COUNT(*) as user_count')
+                        ->groupBy('city')
+                        ->orderBy('user_count', 'desc')
+                        ->get();
+
+    $topLocations = $usersByCity->take(5);
+
+    $otherLocationsCount = $usersByCity->skip(5)->sum('user_count');
+
+    $response = $topLocations->map(function($location) {
+        return [
+            'city' => $location->city,
+            'user_count' => $location->user_count
+        ];
+    });
+
+    if ($otherLocationsCount > 0) {
+        $response->push([
+            'city' => 'Other locations',
+            'user_count' => $otherLocationsCount
+        ]);
+    }
+
+    return response()->json($response, 200);
 }
 
 }

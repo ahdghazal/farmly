@@ -126,11 +126,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/admin/statistics/total-users', [AdminController::class, 'getTotalUsers']); //done
     Route::get('/admin/top-favorited-plants', [AdminController::class, 'getTopFavoritedPlants']);//done
     Route::get('/admin/top-garden-locations', [AdminController::class, 'getTopLocations']); //done
+    Route::get('/admin/top-user-locations', [AdminController::class, 'getTopUserLocations']); //done
+
 
     // Retrieve tables routes
     Route::get('/admin/plants', [AdminController::class, 'getPlants']); //done
     Route::get('/admin/posts', [AdminController::class, 'getPosts']); //done
     Route::get('/admin/users', [AdminController::class, 'getAllUsers']); //done
+    Route::get('/admin/gardens', [AdminController::class, 'getAllGardens']); //done
+
 
     // Plants operations
     Route::post('/admin/addPlant', [AdminController::class, 'addPlant']); //done

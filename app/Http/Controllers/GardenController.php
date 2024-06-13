@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Garden;
 use App\Models\Plant;
@@ -10,13 +10,15 @@ use Validator;
 class GardenController extends Controller
 {
     public function showGardens()
-{
-    $gardens = Garden::withCount('plantEntries')->get(['name', 'location', 'area', 'is_inside', 'plant_entries_count']);
-
-    return response()->json($gardens, 200);
-}
-
-
+    {
+        $user = Auth::user();
+    
+        $gardens = Garden::where('user_id', $user->id)
+                         ->withCount('plantEntries')
+                         ->get(['name', 'location', 'area', 'is_inside', 'plant_entries_count']);
+    
+        return response()->json($gardens, 200);
+    }
 
 
 
