@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Garden;
 use App\Models\Plant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\PlantReminderNotification;
@@ -24,7 +25,9 @@ class ReminderController extends Controller
             'low' => 7,
         ];
 
-        $gardens = Garden::with(['plants'])->get();
+        $user = Auth::user();
+
+        $gardens = Garden::with(['plants'])->where('user_id', $user->id)->get();
 
         foreach ($gardens as $garden) {
             foreach ($garden->plants as $plant) {
@@ -41,7 +44,7 @@ class ReminderController extends Controller
                     $nextWateringDate = $lastWatered ? $lastWatered->created_at->addDays($waterInterval) : now();
 
                     if (now()->greaterThanOrEqualTo($nextWateringDate)) {
-                        $this->sendReminder($garden->user, $plant, 'water');
+                        $this->sendReminder($user, $plant, 'water');
 
                         DB::table('plant_reminders')->insert([
                             'plant_id' => $plant->id,
@@ -56,7 +59,8 @@ class ReminderController extends Controller
 
         return response()->json(['message' => 'Watering reminders sent successfully.'], 200);
     }
- /**
+
+    /**
      * Send pruning reminders.
      *
      * @return \Illuminate\Http\JsonResponse
@@ -69,7 +73,9 @@ class ReminderController extends Controller
             'annually' => 365,
         ];
 
-        $gardens = Garden::with(['plants'])->get();
+        $user = Auth::user();
+
+        $gardens = Garden::with(['plants'])->where('user_id', $user->id)->get();
 
         foreach ($gardens as $garden) {
             foreach ($garden->plants as $plant) {
@@ -86,7 +92,7 @@ class ReminderController extends Controller
                     $nextPruningDate = $lastPruned ? $lastPruned->created_at->addDays($pruningInterval) : now();
 
                     if (now()->greaterThanOrEqualTo($nextPruningDate)) {
-                        $this->sendReminder($garden->user, $plant, 'prune');
+                        $this->sendReminder($user, $plant, 'prune');
 
                         DB::table('plant_reminders')->insert([
                             'plant_id' => $plant->id,
@@ -114,6 +120,4 @@ class ReminderController extends Controller
         $message = "Reminder: It's time to {$type} your plant: {$plant->name}.";
         Notification::send($user, new PlantReminderNotification($message));
     }
-
-
 }
