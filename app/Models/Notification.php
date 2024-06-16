@@ -11,8 +11,17 @@ class Notification extends Model
 
     protected $fillable = ['user_id', 'type', 'data', 'read'];
 
+    protected $casts = [
+        'data' => 'array',
+        'read' => 'boolean',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+    public $timestamps = true;
+
+    protected $table = 'notifications';
 }

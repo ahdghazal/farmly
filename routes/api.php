@@ -14,6 +14,8 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,10 +90,6 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('report/{postId}', [CommunityController::class, 'reportPost']);
 
 
-    Route::get('/notifications', [NotificationsController::class, 'getNotifications']);
-    Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead']);
-
-
     //for app user side chat implementation
 
     Route::get('user-conversation', [ConversationController::class, 'showUserConversation']);
@@ -101,6 +99,16 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::patch('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
     Route::delete('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
     Route::patch('conversations/{conversationId}/messages/{messageId}/read', [MessageController::class, 'markAsRead']);
+
+
+    Route::get('/get-notifications', [NotificationController::class, 'getNotifications']);
+    Route::post('/create-notifications', [NotificationController::class, 'createNotification']);
+    Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
+
+    Route::get('/send-watering-reminders', [ReminderController::class, 'sendWateringReminders']);
+    Route::get('/send-pruning-reminders', [ReminderController::class, 'sendPruningReminders']);
+
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
