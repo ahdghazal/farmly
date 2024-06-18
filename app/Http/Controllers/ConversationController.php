@@ -40,29 +40,25 @@ class ConversationController extends Controller
 
         return response()->json($conversation, 201);
     }
-
+    
     public function show($id)
     {
-        $conversation = Conversation::with(['messages.sender'])->findOrFail($id);
-
-        if (!Auth::user()->isAdmin() && ($conversation->user1_id != Auth::id() && $conversation->user2_id != Auth::id())) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        try {
+            $conversation = Conversation::with(['messages.sender'])->findOrFail($id);
+    
+            // Check authorization
+            if (!Auth::user()->isAdmin() && ($conversation->user1_id != Auth::id() && $conversation->user2_id != Auth::id())) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+    
+            return response()->json($conversation, 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch conversation'], 500);
         }
-
-        return response()->json($conversation, 200);
     }
-
-    public function destroy($id)
-    {
-        $conversation = Conversation::findOrFail($id);
-
-        if (Auth::user()->isAdmin() || $conversation->user1_id == Auth::id() || $conversation->user2_id == Auth::id()) {
-            $conversation->delete();
-            return response()->json(null, 204);
-        }
-
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
+    
 
     public function showUserConversation()
     {
