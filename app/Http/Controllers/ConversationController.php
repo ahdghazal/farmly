@@ -40,7 +40,7 @@ class ConversationController extends Controller
 
         return response()->json($conversation, 201);
     }
-    
+
     public function show($id)
     {
         try {
@@ -60,16 +60,21 @@ class ConversationController extends Controller
     }
     
 
-    public function showUserConversation()
-    {
-        $user = Auth::user();
+public function showUserConversation()
+{
+    $user = Auth::user();
 
-        $conversation = Conversation::where('user1_id', $user->id)->first();
+    $conversation = Conversation::where('user1_id', $user->id)->first();
 
-        if (!$conversation) {
-            return response()->json(['message' => 'No conversation found for the user'], 404);
-        }
-
-        return response()->json(['conversation' => $conversation]);
+    if (!$conversation) {
+        return response()->json(['message' => 'No conversation found for the user'], 404);
     }
+
+    $messages = $conversation->messages()->with('sender')->get();
+
+    $conversation->messages = $messages;
+
+    return response()->json(['conversation' => $conversation]);
+}
+
 }
