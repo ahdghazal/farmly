@@ -65,8 +65,16 @@ class MessageController extends Controller
     public function destroy($conversationId, $messageId)
     {
         try {
+            Log::info('Conversation ID: ' . $conversationId);
+            Log::info('Message ID: ' . $messageId);
+
             $message = Message::where('conversation_id', $conversationId)
-                              ->findOrFail($messageId);
+                              ->where('id', $messageId)
+                              ->first();
+
+            if (!$message) {
+                return response()->json(['error' => 'Message not found'], 404);
+            }
 
             if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
                 return response()->json(['error' => 'Unauthorized'], 403);
@@ -78,7 +86,7 @@ class MessageController extends Controller
 
             return response()->json(null, 204);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Message not found'], 404);
+            return response()->json(['error' => 'An error occurred while deleting the message'], 500);
         }
     }
 
