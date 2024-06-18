@@ -94,7 +94,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
     Route::get('user-conversation', [ConversationController::class, 'showUserConversation']);
     Route::get('conversations/{conversationId}/unseen-count', [ConversationController::class,'countUnseenMessages']);
-
+    Route::post('/conversation/get-id', [ConversationController::class, 'getConversationId']);
 
     Route::post('conversations/{conversationId}/messages', [MessageController::class, 'store']);
     Route::patch('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);

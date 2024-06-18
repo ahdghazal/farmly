@@ -143,4 +143,19 @@ public function countUnseenMessages($conversationId)
             return response()->json(['error' => 'Failed to count unseen messages'], 500);
         }
     }
+
+    public function getConversationId(Request $request)
+    {
+        $user = Auth::user();
+        
+        $conversation = Conversation::whereJsonContains('participants', [$user->id])
+                                    ->pluck('id')
+                                    ->first();
+
+        if ($conversation) {
+            return response()->json(['conversation_id' => $conversation], 200);
+        } else {
+            return response()->json(['message' => 'Conversation not found'], 404);
+        }
+    }
 }
