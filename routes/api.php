@@ -93,12 +93,12 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     //for app user side chat implementation
 
     Route::get('user-conversation', [ConversationController::class, 'showUserConversation']);
-;
+    Route::get('conversations/{conversationId}/unseen-count', [ConversationController::class,'countUnseenMessages']);
+
 
     Route::post('conversations/{conversationId}/messages', [MessageController::class, 'store']);
     Route::patch('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);
     Route::delete('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
-    Route::patch('conversations/{conversationId}/messages/{messageId}/read', [MessageController::class, 'markAsRead']);
 
 
     Route::get('/get-notifications', [NotificationController::class, 'getNotifications']);
@@ -170,14 +170,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('admin/conversation', [ConversationController::class, 'store']);//done
     Route::get('admin/conversations/{id}', [ConversationController::class, 'show']);//done
     Route::delete('admin/delete-conversation/{id}', [ConversationController::class, 'destroy']);//done
+    Route::get('admin/conversations/{conversationId}/unseen-count', [ConversationController::class,'countUnseenMessages']);
 
 
     Route::post('admin/conversations/{conversationId}/messages', [MessageController::class, 'store']);//done
     Route::patch('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'update']);//done
     Route::delete('admin/conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);//done
-    Route::patch('admin/conversations/{conversationId}/messages/{messageId}/read', [MessageController::class, 'markAsRead']);
 
 
+    
 });
 // Pusher authentication route accessible by both users and admins
 Route::middleware(['auth:sanctum'])->post('/broadcasting/auth', function (Request $request) {
