@@ -18,26 +18,24 @@ class MessageController extends Controller
     public function store(Request $request, $conversationId)
     {
         $request->validate(['message' => 'required|string']);
-    
+
         $conversation = Conversation::findOrFail($conversationId);
-    
+
         if (!($conversation->user1_id == Auth::id() || $conversation->user2_id == Auth::id() || Auth::user()->isAdmin())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-    
+
         $message = Message::create([
             'conversation_id' => $conversationId,
             'sender_id' => Auth::id(),
             'message' => $request->message,
             'is_read' => false,
         ]);
-    
+
         broadcast(new MessageSent($message))->toOthers();
-    
+
         return response()->json($message->load('sender'), 201);
     }
-    
-    
 
     public function update(Request $request, $conversationId, $messageId)
     {
@@ -56,26 +54,17 @@ class MessageController extends Controller
 
             $this->broadcastMessage($message, 'message-updated');
 
-            return response()->json($message, 200);
+            return response()->json($message->load('sender'), 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Message not found'], 404);
         }
     }
 
-
-    public function destroy($conversationId, $messageId)
+    public function destroy(Request $request, $conversationId, $messageId)
     {
         try {
-            Log::info('Conversation ID: ' . $conversationId);
-            Log::info('Message ID: ' . $messageId);
-
             $message = Message::where('conversation_id', $conversationId)
-                              ->where('id', $messageId)
-                              ->first();
-
-            if (!$message) {
-                return response()->json(['error' => 'Message not found'], 404);
-            }
+                              ->findOrFail($messageId);
 
             if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
                 return response()->json(['error' => 'Unauthorized'], 403);
@@ -85,29 +74,31 @@ class MessageController extends Controller
 
             $this->broadcastMessage($message, 'message-deleted');
 
-            return response()->json(null, 204);
+            return response()->json(['status' => 'success', 'message' => 'Message deleted successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred while deleting the message'], 500);
+            return response()->json(['status' => 'error', 'message' => 'An error occurred while deleting the message.'], 500);
         }
     }
 
     public function markAsRead($conversationId, $messageId)
     {
-        $message = Message::where('conversation_id', $conversationId)
-            ->where('id', $messageId)
-            ->firstOrFail();
+        try {
+            $message = Message::where('conversation_id', $conversationId)
+                              ->findOrFail($messageId);
 
-        // Ensure the authenticated user is an admin or a participant in the conversation
-        if (!Auth::user()->isAdmin() && ($message->conversation->user1_id != Auth::id() && $message->conversation->user2_id != Auth::id())) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            if (!Auth::user()->isAdmin() && ($message->conversation->user1_id != Auth::id() && $message->conversation->user2_id != Auth::id())) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $message->is_read = true;
+            $message->save();
+
+            broadcast(new MessageRead($message))->toOthers();
+
+            return response()->json($message->load('sender'), 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Message not found'], 404);
         }
-
-        $message->is_read = true;
-        $message->save();
-
-        broadcast(new MessageRead($message))->toOthers();
-
-        return response()->json($message, 200);
     }
 
     protected function broadcastMessage(Message $message, $event = 'message-sent')
