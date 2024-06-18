@@ -17,6 +17,13 @@ class MessageController extends Controller
         $request->validate(['message' => 'required|string']);
 
         $conversation = Conversation::findOrFail($conversationId);
+
+        // Check if the authenticated user is an admin
+        if (!Auth::user()->isAdmin()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Ensure the conversation belongs to the admin-user pair
         if ($conversation->user1_id != Auth::id() && $conversation->user2_id != Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -36,10 +43,15 @@ class MessageController extends Controller
     public function update(Request $request, $conversationId, $messageId)
     {
         $request->validate(['message' => 'required|string']);
+
         $message = Message::where('conversation_id', $conversationId)
             ->where('id', $messageId)
-            ->where('sender_id', Auth::id())
             ->firstOrFail();
+
+        // Ensure the authenticated user is an admin or the message sender
+        if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
         $message->message = $request->message;
         $message->save();
@@ -53,8 +65,12 @@ class MessageController extends Controller
     {
         $message = Message::where('conversation_id', $conversationId)
             ->where('id', $messageId)
-            ->where('sender_id', Auth::id())
             ->firstOrFail();
+
+        // Ensure the authenticated user is an admin or the message sender
+        if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
         $message->delete();
 
@@ -68,19 +84,19 @@ class MessageController extends Controller
         $message = Message::where('conversation_id', $conversationId)
             ->where('id', $messageId)
             ->firstOrFail();
-    
-        if ($message->conversation->user1_id == Auth::id() || $message->conversation->user2_id == Auth::id()) {
-            $message->is_read = true;
-            $message->save();
-    
-            broadcast(new MessageRead($message))->toOthers();
-    
-            return response()->json($message, 200);
+
+        // Ensure the authenticated user is an admin or a participant in the conversation
+        if (!Auth::user()->isAdmin() && ($message->conversation->user1_id != Auth::id() && $message->conversation->user2_id != Auth::id())) {
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
-    
-        return response()->json(['error' => 'Unauthorized'], 403);
+
+        $message->is_read = true;
+        $message->save();
+
+        broadcast(new MessageRead($message))->toOthers();
+
+        return response()->json($message, 200);
     }
-    
 
     protected function broadcastMessage(Message $message, $event = 'message-sent')
     {

@@ -16,7 +16,7 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
-
+use Pusher\Pusher;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -108,7 +108,6 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
     Route::get('/send-watering-reminders', [ReminderController::class, 'sendWateringReminders']);
     Route::get('/send-pruning-reminders', [ReminderController::class, 'sendPruningReminders']);
-
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -179,4 +178,18 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::patch('admin/conversations/{conversationId}/messages/{messageId}/read', [MessageController::class, 'markAsRead']);
 
 
+});
+// Pusher authentication route accessible by both users and admins
+Route::middleware(['auth:sanctum'])->post('/broadcasting/auth', function (Request $request) {
+    $pusher = new Pusher(
+        config('broadcasting.connections.pusher.key'),
+        config('broadcasting.connections.pusher.secret'),
+        config('broadcasting.connections.pusher.app_id'),
+        [
+            'cluster' => config('broadcasting.connections.pusher.options.cluster'),
+            'encrypted' => true,
+        ]
+    );
+
+    return $pusher->socket_auth($request->input('channel_name'), $request->input('socket_id'));
 });

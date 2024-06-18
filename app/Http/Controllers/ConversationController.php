@@ -30,12 +30,12 @@ class ConversationController extends Controller
         }
 
         $request->validate([
-            'user2_id' => 'required|exists:users,id',
+            'user1_id' => 'required|exists:users,id',
         ]);
 
         $conversation = Conversation::firstOrCreate([
-            'user1_id' => Auth::id(),
-            'user2_id' => $request->user2_id,
+            'user2_id' => Auth::id(),
+            'user1_id' => $request->user2_id,
         ]);
 
         return response()->json($conversation, 201);

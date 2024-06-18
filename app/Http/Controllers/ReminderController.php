@@ -7,11 +7,17 @@ use App\Models\Plant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\PlantReminderNotification;
+use GuzzleHttp\Client;
 
 class ReminderController extends Controller
 {
+    protected $firebaseUrl;
+
+    public function __construct()
+    {
+        $this->firebaseUrl = 'https://fcm.googleapis.com/fcm/send';
+    }
+
     /**
      * Send watering reminders.
      *
@@ -19,40 +25,24 @@ class ReminderController extends Controller
      */
     public function sendWateringReminders()
     {
-        $intervals = [
-            'high' => 2,
-            'moderate' => 4,
-            'low' => 7,
-        ];
-
-        $user = Auth::user();
-
-        $gardens = Garden::with(['plants'])->where('user_id', $user->id)->get();
+        $user = Auth::user(); // Assuming you are using authentication
+        $gardens = Garden::where('user_id', $user->id)->get();
 
         foreach ($gardens as $garden) {
             foreach ($garden->plants as $plant) {
-                $waterNeed = strtolower($plant->water_need);
-                $waterInterval = $intervals[$waterNeed] ?? null;
+                $nextWateringDate = $plant->next_watering_date;
 
-                if ($waterInterval) {
-                    $lastWatered = DB::table('plant_reminders')
-                        ->where('plant_id', $plant->id)
-                        ->where('type', 'water')
-                        ->orderBy('created_at', 'desc')
-                        ->first();
+                if (now()->greaterThanOrEqualTo($nextWateringDate)) {
+                    // Send reminder using Firebase
+                    $this->sendReminder($user, $plant, 'water');
 
-                    $nextWateringDate = $lastWatered ? $lastWatered->created_at->addDays($waterInterval) : now();
-
-                    if (now()->greaterThanOrEqualTo($nextWateringDate)) {
-                        $this->sendReminder($user, $plant, 'water');
-
-                        DB::table('plant_reminders')->insert([
-                            'plant_id' => $plant->id,
-                            'type' => 'water',
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
+                    // Save reminder details
+                    DB::table('plant_reminders')->insert([
+                        'plant_id' => $plant->id,
+                        'type' => 'water',
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
                 }
             }
         }
@@ -67,40 +57,24 @@ class ReminderController extends Controller
      */
     public function sendPruningReminders()
     {
-        $intervals = [
-            'weekly' => 7,
-            'regularly' => 30,
-            'annually' => 365,
-        ];
-
-        $user = Auth::user();
-
-        $gardens = Garden::with(['plants'])->where('user_id', $user->id)->get();
+        $user = Auth::user(); // Assuming you are using authentication
+        $gardens = Garden::where('user_id', $user->id)->get();
 
         foreach ($gardens as $garden) {
             foreach ($garden->plants as $plant) {
-                $pruningNeed = strtolower($plant->pruning);
-                $pruningInterval = $intervals[$pruningNeed] ?? null;
+                $nextPruningDate = $plant->next_pruning_date;
 
-                if ($pruningInterval) {
-                    $lastPruned = DB::table('plant_reminders')
-                        ->where('plant_id', $plant->id)
-                        ->where('type', 'prune')
-                        ->orderBy('created_at', 'desc')
-                        ->first();
+                if (now()->greaterThanOrEqualTo($nextPruningDate)) {
+                    // Send reminder using Firebase
+                    $this->sendReminder($user, $plant, 'prune');
 
-                    $nextPruningDate = $lastPruned ? $lastPruned->created_at->addDays($pruningInterval) : now();
-
-                    if (now()->greaterThanOrEqualTo($nextPruningDate)) {
-                        $this->sendReminder($user, $plant, 'prune');
-
-                        DB::table('plant_reminders')->insert([
-                            'plant_id' => $plant->id,
-                            'type' => 'prune',
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
+                    // Save reminder details
+                    DB::table('plant_reminders')->insert([
+                        'plant_id' => $plant->id,
+                        'type' => 'prune',
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
                 }
             }
         }
@@ -118,6 +92,37 @@ class ReminderController extends Controller
     protected function sendReminder($user, $plant, $type)
     {
         $message = "Reminder: It's time to {$type} your plant: {$plant->name}.";
-        Notification::send($user, new PlantReminderNotification($message));
+
+        // Send notification using Firebase
+        $this->sendFirebaseNotification($user, $message);
+    }
+
+    /**
+     * Send Firebase notification.
+     *
+     * @param User $user
+     * @param string $message
+     * @return array
+     */
+    protected function sendFirebaseNotification($user, $message)
+    {
+        $client = new Client();
+
+        $response = $client->post($this->firebaseUrl, [
+            'headers' => [
+                'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'to' => $user->device_token, // Example: send to a specific device token
+                'notification' => [
+                    'title' => 'Plant Reminder',
+                    'body' => $message,
+                ],
+            ],
+        ]);
+
+        return json_decode($response->getBody(), true);
     }
 }
+
