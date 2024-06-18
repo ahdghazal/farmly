@@ -46,9 +46,24 @@ class ConversationController extends Controller
         try {
             $conversation = Conversation::with(['messages.sender'])->findOrFail($id);
     
-            // Check authorization
             if (!Auth::user()->isAdmin() && ($conversation->user1_id != Auth::id() && $conversation->user2_id != Auth::id())) {
                 return response()->json(['error' => 'Unauthorized'], 403);
+            }
+    
+            $user = Auth::user();
+            $messages = $conversation->messages;
+    
+            if ($user->isAdmin()) {
+                $messagesToMark = $messages->where('sender_id', '!=', $user->id)->where('is_read', false);
+            } else {
+                $messagesToMark = $messages->where('sender_id', '!=', $conversation->user1_id)->where('is_read', false);
+            }
+    
+            foreach ($messagesToMark as $message) {
+                $message->is_read = true;
+                $message->save();
+    
+                broadcast(new MessageRead($message))->toOthers();
             }
     
             return response()->json($conversation, 200);
@@ -60,21 +75,70 @@ class ConversationController extends Controller
     }
     
 
-public function showUserConversation()
-{
-    $user = Auth::user();
+    public function showUserConversation()
+    {
+        $user = Auth::user();
 
-    $conversation = Conversation::where('user1_id', $user->id)->first();
+        $conversation = Conversation::where('user1_id', $user->id)->first();
 
-    if (!$conversation) {
-        return response()->json(['message' => 'No conversation found for the user'], 404);
+        if (!$conversation) {
+            return response()->json(['message' => 'No conversation found for the user'], 404);
+        }
+
+        if (!$user->isAdmin()) {
+            $this->markAdminMessagesAsRead($conversation);
+        }
+
+        $messages = $conversation->messages()->with('sender')->get();
+
+        $conversation->messages = $messages;
+
+        return response()->json(['conversation' => $conversation]);
     }
 
-    $messages = $conversation->messages()->with('sender')->get();
+    /**
+     * Mark admin messages in a conversation as read.
+     *
+     * @param \App\Models\Conversation $conversation
+     */
+    protected function markAdminMessagesAsRead($conversation)
+    {
+        $user = Auth::user();
 
-    $conversation->messages = $messages;
+        $adminMessages = $conversation->messages()->where('sender_id', '!=', $conversation->user1_id)->get();
 
-    return response()->json(['conversation' => $conversation]);
-}
+        foreach ($adminMessages as $message) {
+            if (!$message->is_read) {
+                $message->is_read = true;
+                $message->save();
+            }
+        }
+    }
 
+public function countUnseenMessages($conversationId)
+    {
+        try {
+            $conversation = Conversation::findOrFail($conversationId);
+
+            if (!Auth::user()->isAdmin() && ($conversation->user1_id != Auth::id() && $conversation->user2_id != Auth::id())) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $user = Auth::user();
+            $messages = $conversation->messages;
+            $countUnseen = 0;
+
+            if ($user->isAdmin()) {
+                $countUnseen = $messages->where('sender_id', '!=', $user->id)->where('is_read', false)->count();
+            } else {
+                $countUnseen = $messages->where('sender_id', '!=', $conversation->user1_id)->where('is_read', false)->count();
+            }
+
+            return response()->json(['unseen_count' => $countUnseen], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to count unseen messages'], 500);
+        }
+    }
 }
