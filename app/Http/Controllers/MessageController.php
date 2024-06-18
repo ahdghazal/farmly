@@ -15,30 +15,25 @@ class MessageController extends Controller
     public function store(Request $request, $conversationId)
     {
         $request->validate(['message' => 'required|string']);
-
+    
         $conversation = Conversation::findOrFail($conversationId);
-
-        // Check if the authenticated user is an admin
-        if (!Auth::user()->isAdmin()) {
+    
+        if (!($conversation->user1_id == Auth::id() || $conversation->user2_id == Auth::id())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-
-        // Ensure the conversation belongs to the admin-user pair
-        if ($conversation->user1_id != Auth::id() && $conversation->user2_id != Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
+    
         $message = Message::create([
             'conversation_id' => $conversationId,
             'sender_id' => Auth::id(),
             'message' => $request->message,
             'is_read' => false,
         ]);
-
+    
         broadcast(new MessageSent($message))->toOthers();
-
+    
         return response()->json($message->load('sender'), 201);
     }
+    
 
     public function update(Request $request, $conversationId, $messageId)
     {
