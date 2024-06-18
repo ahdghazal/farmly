@@ -34,8 +34,8 @@ class ConversationController extends Controller
         ]);
 
         $conversation = Conversation::firstOrCreate([
-            'user2_id' => Auth::id(),
             'user1_id' => $request->user2_id,
+            'user2_id' => Auth::id(),
         ]);
 
         return response()->json($conversation, 201);
