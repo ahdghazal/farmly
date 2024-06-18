@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Pusher\Pusher;
 use App\Events\MessageSent;
 use App\Events\MessageRead;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
 
 class MessageController extends Controller
 {
@@ -40,39 +42,44 @@ class MessageController extends Controller
     {
         $request->validate(['message' => 'required|string']);
 
-        $message = Message::where('conversation_id', $conversationId)
-            ->where('id', $messageId)
-            ->firstOrFail();
+        try {
+            $message = Message::where('conversation_id', $conversationId)
+                              ->findOrFail($messageId);
 
-        // Ensure the authenticated user is an admin or the message sender
-        if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $message->message = $request->message;
+            $message->save();
+
+            $this->broadcastMessage($message, 'message-updated');
+
+            return response()->json($message, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Message not found'], 404);
         }
-
-        $message->message = $request->message;
-        $message->save();
-
-        $this->broadcastMessage($message, 'message-updated');
-
-        return response()->json($message, 200);
     }
+
 
     public function destroy($conversationId, $messageId)
     {
-        $message = Message::where('conversation_id', $conversationId)
-            ->where('id', $messageId)
-            ->firstOrFail();
+        try {
+            $message = Message::where('conversation_id', $conversationId)
+                              ->findOrFail($messageId);
 
-        // Ensure the authenticated user is an admin or the message sender
-        if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $message->delete();
+
+            $this->broadcastMessage($message, 'message-deleted');
+
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Message not found'], 404);
         }
-
-        $message->delete();
-
-        $this->broadcastMessage($message, 'message-deleted');
-
-        return response()->json(null, 204);
     }
 
     public function markAsRead($conversationId, $messageId)
