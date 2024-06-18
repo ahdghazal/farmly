@@ -18,7 +18,7 @@ class MessageController extends Controller
     
         $conversation = Conversation::findOrFail($conversationId);
     
-        if (!($conversation->user1_id == Auth::id() || $conversation->user2_id == Auth::id())) {
+        if (!($conversation->user1_id == Auth::id() || $conversation->user2_id == Auth::id() || Auth::user()->isAdmin())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
     
@@ -33,6 +33,7 @@ class MessageController extends Controller
     
         return response()->json($message->load('sender'), 201);
     }
+    
     
 
     public function update(Request $request, $conversationId, $messageId)
