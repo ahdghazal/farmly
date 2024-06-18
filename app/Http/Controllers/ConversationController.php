@@ -148,7 +148,8 @@ public function countUnseenMessages($conversationId)
     {
         $user = Auth::user();
         
-        $conversation = Conversation::whereJsonContains('participants', [$user->id])
+        $conversation = Conversation::where('user1_id', $user->id)
+                                    ->orWhere('user2_id', $user->id)
                                     ->pluck('id')
                                     ->first();
 
