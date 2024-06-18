@@ -59,26 +59,31 @@ class MessageController extends Controller
             return response()->json(['error' => 'Message not found'], 404);
         }
     }
-
+    
     public function destroy(Request $request, $conversationId, $messageId)
     {
         try {
             $message = Message::where('conversation_id', $conversationId)
                               ->findOrFail($messageId);
-
+    
             if (!Auth::user()->isAdmin() && $message->sender_id != Auth::id()) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-
+    
             $message->delete();
-
+    
             $this->broadcastMessage($message, 'message-deleted');
-
+    
             return response()->json(['status' => 'success', 'message' => 'Message deleted successfully.'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Message not found: {$e->getMessage()}");
+            return response()->json(['status' => 'error', 'message' => 'Message not found.'], 404);
         } catch (\Exception $e) {
+            Log::error("An error occurred while deleting the message: {$e->getMessage()}");
             return response()->json(['status' => 'error', 'message' => 'An error occurred while deleting the message.'], 500);
         }
     }
+    
 
     public function markAsRead($conversationId, $messageId)
     {
