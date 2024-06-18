@@ -28,22 +28,18 @@ class ConversationController extends Controller
         if (!Auth::user()->isAdmin()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-    
+
         $request->validate([
-            'user1_id' => 'required|exists:users,id',
+            'user2_id' => 'required|exists:users,id',
         ]);
-    
-        // Create the conversation record
-        $conversation = Conversation::create([
-            'user1_id' => $request->user1_id,
-            'user2_id' => Auth::id(), // Assigning the admin's ID as user2_id
-            'updated_at' => now(),
-            'created_at' => now(),
+
+        $conversation = Conversation::firstOrCreate([
+            'user1_id' => Auth::id(),
+            'user2_id' => $request->user2_id,
         ]);
-    
+
         return response()->json($conversation, 201);
     }
-    
 
     public function show($id)
     {
