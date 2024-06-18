@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Pusher\Pusher;
 use App\Events\MessageSent;
 use App\Events\MessageRead;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 
