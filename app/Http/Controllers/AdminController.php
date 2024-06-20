@@ -683,8 +683,7 @@ public function updatePlant(Request $request, $id)
     
             $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
     
-            $directory = public_path('plantPictures/' . $category);
-            $filePath = $directory . '/' . $fileName;
+            $filePath = 'plantPictures/' . $category . '/' . $fileName;
     
             if (!file_exists($directory)) {
                 mkdir($directory, 0755, true);
