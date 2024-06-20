@@ -683,10 +683,11 @@ public function updatePlant(Request $request, $id)
     
             $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
     
-            $filePath = 'plantPictures/' . $category . '/' . $fileName;
+            $directory = 'plantPictures/' . $category;
+            $filePath = $directory . '/' . $fileName;
     
             if (!file_exists($directory)) {
-                mkdir($directory, 0755, true);
+                mkdir($directory, 0775, true);
             }
     
             if (file_put_contents($filePath, $decodedImage) === false) {
