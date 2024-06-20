@@ -655,7 +655,6 @@ public function updatePlant(Request $request, $id)
         return response()->json($plant, 200);
     }
 
-
     public function uploadPlantPicture(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -669,22 +668,25 @@ public function updatePlant(Request $request, $id)
         }
 
         $encodedPicture = $request->picture;
-        $pictureName = $request->picture_name;
         $category = $request->category;
+        $userId = auth()->id();
 
-        $extension = pathinfo($pictureName, PATHINFO_EXTENSION);
-        if (!$extension) {
-            $extension = 'jpg';
-        }
-
-        $fileName = auth()->id() . '_' . time() . '.' . $extension;
-
-        $decodedPicture = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $encodedPicture));
-
-        $filePath = 'plantPictures/' . $category . '/' . $fileName;
-        Storage::disk('public')->put($filePath, $decodedPicture);
+        $filePath = $this->saveBase64ImagePlant($encodedPicture, $userId, $category);
 
         return response()->json(['picture_path' => $filePath], 201);
+    }
+
+    private function saveBase64ImagePlant($imageData, $userId, $category)
+    {
+        $decodedImage = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageData));
+
+        $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
+        
+        $filePath = 'plantPictures/' . $category . '/' . $fileName;
+
+        file_put_contents(public_path($filePath), $decodedImage);
+
+        return $filePath;
     }
 
 public function getTopUserLocations()
