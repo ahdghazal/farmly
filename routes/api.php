@@ -146,7 +146,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/updatePlant/{id}', [AdminController::class, 'updatePlant']); //done
     Route::get('/admin/showPlant/{id}', [AdminController::class, 'showPlant']); //done
     Route::post('/admin/deletePlant/{id}', [AdminController::class, 'deletePlant']); //done
-    Route::post('/admin/uploadPlantPicture', [AdminController::class, 'uploadPlantPicture']);//done
+    Route::post('/admin/{plantId}/uploadPlantPicture', [AdminController::class, 'uploadPlantPicture']); //done
 
     // Post and announcement routes
     Route::post('/admin/adminAddPost', [AdminController::class, 'createAdminPost']);//done
