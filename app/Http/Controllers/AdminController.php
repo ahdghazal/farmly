@@ -656,7 +656,7 @@ public function updatePlant(Request $request, $id)
     }
 
 
-    public function uploadPlantPicture(Request $request, $plantId)
+    public function uploadPlantPicture(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'picture' => 'required|string',
@@ -683,13 +683,6 @@ public function updatePlant(Request $request, $id)
 
         $filePath = 'plantPictures/' . $category . '/' . $fileName;
         Storage::disk('public')->put($filePath, $decodedPicture);
-
-        $plant = Plant::find($plantId);
-        if (!$plant) {
-            return response()->json(['error' => 'Plant not found'], 404);
-        }
-
-        $plant->update(['picture' => $filePath]);
 
         return response()->json(['picture_path' => $filePath], 201);
     }
