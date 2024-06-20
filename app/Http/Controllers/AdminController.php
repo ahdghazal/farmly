@@ -676,18 +676,31 @@ public function updatePlant(Request $request, $id)
         return response()->json(['picture_path' => $filePath], 201);
     }
 
-    private function saveBase64ImagePlant($imageData, $userId, $category)
+    private function saveBase64ImagePlant($imageData, $category, $userId)
     {
-        $decodedImage = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageData));
-
-        $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
-        
-        $filePath = 'plantPictures/' . $category . '/' . $fileName;
-
-        file_put_contents(public_path($filePath), $decodedImage);
-
-        return $filePath;
+        try {
+            $decodedImage = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageData));
+    
+            $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
+    
+            $directory = public_path('plantPictures/' . $category);
+            $filePath = $directory . '/' . $fileName;
+    
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+    
+            if (file_put_contents($filePath, $decodedImage) === false) {
+                throw new Exception("Failed to save the file.");
+            }
+    
+            return $filePath;
+        } catch (Exception $e) {
+            Log::error('Failed to save image: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to save image.'], 500);
+        }
     }
+    
 
 public function getTopUserLocations()
 {
