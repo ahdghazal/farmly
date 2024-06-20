@@ -671,7 +671,7 @@ public function updatePlant(Request $request, $id)
         $category = $request->category;
         $userId = auth()->id();
 
-        $filePath = $this->saveBase64ImagePlant($encodedPicture, $userId, $category);
+        $filePath = $this->saveBase64ImagePlant($encodedPicture, $category, $userId);
 
         return response()->json(['picture_path' => $filePath], 201);
     }
