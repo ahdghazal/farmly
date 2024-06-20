@@ -50,8 +50,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/updateProfile', [AuthUserController::class, 'updateProfile']);//done
     Route::post('/changePassword', [AuthUserController::class, 'changePassword']);//done
     Route::post('/uploadPicture', [AuthUserController::class, 'uploadPicture']);//done
-    Route::post('/upload-picture', [AdminController::class, 'uploadPicture']); //done
-    Route::post('/uploadPlantPicture', [AdminController::class, 'uploadPlantPicture']); //done
+
 
     Route::get('/showPlant/{id}', [PlantController::class, 'showPlant']); //done
     Route::post('/filterPlants', [PlantController::class, 'filterPlants']); //done
@@ -120,6 +119,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/admin/change-password', [AdminController::class, 'changePassword']); //done
     Route::get('/admin/showProfile', [AdminController::class, 'showProfile']); //done
     Route::put('/admin/updateProfile', [AdminController::class, 'updateProfile']); //done
+    Route::post('/admin/upload-picture', [AdminController::class, 'uploadPicture']); //done
     
     // User and post management routes
     Route::delete('/admin/deleteUser/{id}', [AdminController::class, 'deleteUser']); //done
@@ -147,6 +147,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/updatePlant/{id}', [AdminController::class, 'updatePlant']); //done
     Route::get('/admin/showPlant/{id}', [AdminController::class, 'showPlant']); //done
     Route::post('/admin/deletePlant/{id}', [AdminController::class, 'deletePlant']); //done
+    Route::post('/admin/uploadPlantPicture', [AdminController::class, 'uploadPlantPicture']); //done
 
     // Post and announcement routes
     Route::post('/admin/adminAddPost', [AdminController::class, 'createAdminPost']);//done
