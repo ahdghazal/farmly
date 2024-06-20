@@ -656,41 +656,40 @@ public function updatePlant(Request $request, $id)
     }
 
 
-    public function uploadPlantPicture(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'picture' => 'required|string',
-        'picture_name' => 'required|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-
-    $encodedPicture = $request->picture;
-    $pictureName = $request->picture_name;
-
-    $extension = pathinfo($pictureName, PATHINFO_EXTENSION);
-    if (!$extension) {
+        public function uploadPlantPicture(Request $request)
+        {
+            $validator = Validator::make($request->all(), [
+                'picture' => 'required|string',
+                'picture_name' => 'required|string',
+                'category' => 'required|string',
+            ]);
     
-        $extension = 'jpg';
-    }
-
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
     
-    $fileName = auth()->id() . '_' . time() . '.' . $extension;
-
-  
-    $decodedPicture = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $encodedPicture));
-
- 
-    $filePath = 'plantPictures/' . $fileName;
-    Storage::disk('public')->put($filePath, $decodedPicture);
-
-  
-    auth()->user()->update(['picture' => $filePath]);
-
-    return response()->json(['picture_path' => $filePath], 201);
-}
+            $encodedPicture = $request->picture;
+            $pictureName = $request->picture_name;
+            $category = $request->category;
+    
+            $extension = pathinfo($pictureName, PATHINFO_EXTENSION);
+            if (!$extension) {
+                $extension = 'jpg';
+            }
+    
+            $fileName = auth()->id() . '_' . time() . '.' . $extension;
+    
+            $decodedPicture = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $encodedPicture));
+    
+            $filePath = 'plantPictures/' . $category . '/' . $fileName;
+            Storage::disk('public')->put($filePath, $decodedPicture);
+    
+            auth()->user()->update(['picture' => $filePath]);
+    
+            return response()->json(['picture_path' => $filePath], 201);
+        }
+    
+    
 
 public function getTopUserLocations()
 {

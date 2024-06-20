@@ -32,7 +32,7 @@ class GardenController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|unique:gardens',
+            'name' => 'required|string',
             'location' => 'required|string',
             'area' => 'required|integer',
             'is_inside' => 'required|boolean',
