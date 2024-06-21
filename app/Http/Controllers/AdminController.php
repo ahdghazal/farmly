@@ -628,6 +628,7 @@ public function updatePlant(Request $request, $id)
             'min_temperature' => 'required|integer',
             'max_temperature' => 'required|integer',
             'description' => 'required|string',
+            'picture' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
