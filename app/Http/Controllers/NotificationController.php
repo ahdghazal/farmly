@@ -124,8 +124,8 @@ public function testqueues (Request $request) {
         }
 
         $firebase = (new Factory)
-            ->withServiceAccount(config('firebase.credentials.file'))
-            ->withDatabaseUri(config('firebase.database.url'));
+            ->withServiceAccount(config('firebase.projects.app.credentials.file'))
+            ->withDatabaseUri(config('firebase.projects.app.database.url'));
 
         $messaging = $firebase->createMessaging();
 
@@ -147,7 +147,7 @@ public function testqueues (Request $request) {
             return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
         }
     }
-
+    
  
     public function markAsRead($id)
     {

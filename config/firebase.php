@@ -50,8 +50,10 @@ return [
              *
              */
 
-            'credentials' => env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS')),
-
+            'credentials' => [
+                'file' => env('FIREBASE_CREDENTIALS'),
+                'auto_discovery' => true,
+            ],
             /*
              * ------------------------------------------------------------------------
              * Firebase Auth Component
