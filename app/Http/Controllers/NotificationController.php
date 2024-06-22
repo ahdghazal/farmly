@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use GuzzleHttp\Client;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\ServiceAccount;
 
 class NotificationController extends Controller
 {
