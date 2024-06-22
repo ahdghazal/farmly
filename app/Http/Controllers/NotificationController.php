@@ -9,6 +9,7 @@ use Kreait\Firebase\Messaging\Notification;
 use GuzzleHttp\Client;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -147,7 +148,7 @@ public function testqueues (Request $request) {
             return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
         }
     }
-    
+
  
     public function markAsRead($id)
     {
