@@ -111,6 +111,11 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
     Route::get('/send-watering-reminders', [ReminderController::class, 'sendWateringReminders']);
     Route::get('/send-pruning-reminders', [ReminderController::class, 'sendPruningReminders']);
+
+
+    //homepage
+    Route::get('/getAnnouncements', [AdminController::class, 'getAllAnnouncements']);//done
+
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
