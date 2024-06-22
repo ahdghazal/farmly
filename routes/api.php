@@ -106,6 +106,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/create-notifications', [NotificationController::class, 'createNotification']);
     Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
+    Route::post('/send-notification', [NotificationController::class, 'sendNotification']);
 
     Route::get('/send-watering-reminders', [ReminderController::class, 'sendWateringReminders']);
     Route::get('/send-pruning-reminders', [ReminderController::class, 'sendPruningReminders']);

@@ -31,7 +31,9 @@ class User extends Authenticatable
         'picture',
         'is_admin',
         'latitude',
-        'longitude'
+        'longitude',
+        'firebase_token',
+
     ];
 
     /**

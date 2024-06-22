@@ -9,18 +9,82 @@ use GuzzleHttp\Client;
 
 class NotificationController extends Controller
 {
+
+   /* public static function notify($title, $body, $device_key){
+        $url="";
+        $serverkey="";
+
+        $dataArr = [
+            "click_action" => "FLUTTER_NOTIFICATION_CLICK",
+            "status" => "done"
+        ];
+        $data = [
+            "registration_ids" => [$device_key],
+            "notification" => [
+            "title" => $title,
+            "body" => $body,
+            "sound" => "default"
+        ],
+            "data"=> $dataArr,
+            "priority" => "high"
+    ];
+
+    $encodedData = json_encode ($data);
+
+$headers = [
+"Authorization:key=" . $serverKey,
+"Content-Type: application/json",
+];
+
+$ch = curl_init();
+curl_setopt ($ch, CURLOPT_URL, $url) ;
+curl_setopt ($ch, CURLOPT_POST, true);
+curl_setopt ($ch,CURLOPT_HTTPHEADER, $headers);
+curl_setopt ($ch,CURLOPT_RETURNTRANSFER, true);
+curl_setopt ($ch,CURLOPT_SSL_VERIFYHOST, ®);
+curl_setopt ($ch, CURLOPT_HTT_VERSION, CURL_HTTP_VERSION_1_1);
+// Disabling SSL Certificate support temporarly
+curl_setopt ($ch,CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $encodedData);
+// Execute post
+$result = curl_exec($ch) ;
+if($result === FALSE){
+return [
+'message' =>'failed',
+'r' => $result,
+'success' => false,
+];
+        
+}
+// Close connection
+curL_close($ch) ;
+
+return [
+'message' => 'success',
+'r' => $result,
+'success' => true,
+];
+}
+
+
+
+public function testqueues (Request $request) {
+    $users = User::whereNotNull('device_key')->whereNotNull('delay')->get();
+    foreach($users as $user){
+        dispatch(new NotificationScheduleJob($user->name, $user->email, $user->device_key))->delay(now()->addMinutes($user->delay));
+    }
+}*/
+
+
+
     protected $firebaseUrl;
 
     public function __construct()
     {
-        $this->firebaseUrl = 'https://fcm.googleapis.com/fcm/send';
+      $this->firebaseUrl = env('FIREBASE_DATABASE_URL'); 
     }
 
-    /**
-     * Get all notifications for the authenticated user.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
+
     public function getNotifications()
     {
         $user = Auth::user();
@@ -29,12 +93,7 @@ class NotificationController extends Controller
         return response()->json($notifications, 200);
     }
 
-    /**
-     * Create a new notification and send it via Firebase.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
+
     public function createNotification(Request $request)
     {
         $notification = Notification::create($request->all());
@@ -45,39 +104,28 @@ class NotificationController extends Controller
         return response()->json($notification, 201);
     }
 
-    /**
-     * Send Firebase notification.
-     *
-     * @param Notification $notification
-     * @return array
-     */
-    protected function sendFirebaseNotification($notification)
+    public function sendNotification(Request $request)
     {
-        $client = new Client();
+        $firebase = app('firebase');
+        $messaging = $firebase->getMessaging();
 
-        $response = $client->post($this->firebaseUrl, [
-            'headers' => [
-                'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
-                'Content-Type' => 'application/json',
+        $message = [
+            'topic' => 'all', // Or use token if you want to send to a specific device
+            'notification' => [
+                'title' => 'Notification Title',
+                'body' => 'Notification Body',
             ],
-            'json' => [
-                'to' => '/topics/all', // Example: send to a specific topic or user device token
-                'notification' => [
-                    'title' => 'New Notification',
-                    'body' => $notification->message,
-                ],
+            'data' => [
+                'key' => 'value', // Additional data
             ],
-        ]);
+        ];
 
-        return json_decode($response->getBody(), true);
+        $messaging->send($message);
+
+        return response()->json(['status' => 'success']);
     }
 
-    /**
-     * Mark a notification as read.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
+ 
     public function markAsRead($id)
     {
         $notification = Notification::findOrFail($id);
@@ -86,11 +134,7 @@ class NotificationController extends Controller
         return response()->json(['message' => 'Notification marked as read'], 200);
     }
 
-    /**
-     * Get the count of unread notifications for the authenticated user.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
+    
     public function getUnreadCount()
     {
         $user = Auth::user();
