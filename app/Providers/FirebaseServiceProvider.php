@@ -14,11 +14,12 @@ class FirebaseServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('firebase', function ($app) {
+        $this->app->singleton('firebase.messaging', function ($app) {
             $credentials = config('firebase.credentials_file');
-            return (new Factory)
-                ->withServiceAccount($credentials)
-                ->create();
+            $factory = (new Factory)
+                ->withServiceAccount($credentials);
+
+            return $factory->createMessaging();
         });
     }
 

@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
 use GuzzleHttp\Client;
 
 class NotificationController extends Controller
@@ -104,26 +105,44 @@ public function testqueues (Request $request) {
         return response()->json($notification, 201);
     }
 
-    public function sendNotification(Request $request)
+
+    
+    public function sendNotificationToUser(Request $request)
     {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'title' => 'required|string',
+            'body' => 'required|string',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        if (!$user->fcm_token) {
+            return response()->json(['message' => 'User does not have an FCM token'], 404);
+        }
+
         $firebase = app('firebase');
         $messaging = $firebase->getMessaging();
 
         $message = [
-            'topic' => 'all', // Or use token if you want to send to a specific device
+            'token' => $user->fcm_token,
             'notification' => [
-                'title' => 'Notification Title',
-                'body' => 'Notification Body',
+                'title' => $request->title,
+                'body' => $request->body,
             ],
             'data' => [
-                'key' => 'value', // Additional data
+                'key' => 'value', // Additional data if needed
             ],
         ];
 
-        $messaging->send($message);
-
-        return response()->json(['status' => 'success']);
+        try {
+            $messaging->send($message);
+            return response()->json(['message' => 'Notification sent successfully']);
+        } catch (\Kreait\Firebase\Exception\MessagingException $e) {
+            return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
+        }
     }
+
 
  
     public function markAsRead($id)

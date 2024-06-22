@@ -420,5 +420,17 @@ public function uploadPicture(Request $request)
     return response()->json(['picture_path' => $filePath], 201);
 }
 
+public function saveFcmToken(Request $request)
+{
+    $request->validate([
+        'fcm_token' => 'required|string',
+    ]);
+
+    $user = Auth::user();
+    $user->fcm_token = $request->fcm_token;
+    $user->save();
+
+    return response()->json(['message' => 'FCM token saved successfully']);
+}
 
 }

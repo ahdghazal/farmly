@@ -50,6 +50,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/updateProfile', [AuthUserController::class, 'updateProfile']);//done
     Route::post('/changePassword', [AuthUserController::class, 'changePassword']);//done
     Route::post('/uploadPicture', [AuthUserController::class, 'uploadPicture']);//done
+    Route::post('/save-fcm-token', [AuthUserController::class, 'saveFcmToken']);
 
 
     Route::get('/showPlant/{id}', [PlantController::class, 'showPlant']); //done
@@ -106,7 +107,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/create-notifications', [NotificationController::class, 'createNotification']);
     Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
-    Route::post('/send-notification', [NotificationController::class, 'sendNotification']);
+    Route::post('/send-notification-to-user', [NotificationController::class, 'sendNotificationToUser']);
 
     Route::get('/send-watering-reminders', [ReminderController::class, 'sendWateringReminders']);
     Route::get('/send-pruning-reminders', [ReminderController::class, 'sendPruningReminders']);
