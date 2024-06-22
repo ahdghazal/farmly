@@ -1,52 +1,35 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Firebase Project Credentials
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the credentials for your Firebase project. The 
-    | values can be obtained from the Firebase Console under Project Settings
-    | and Service Accounts.
-    |
-    */
+    'default' => env('FIREBASE_PROJECT', 'app'),
 
-
-    'credentials_file' => env('FIREBASE_CREDENTIALS', base_path('config/firebase_credentials.json')),
-  
-
-    /*
-    |--------------------------------------------------------------------------
-    | Firebase Database URL
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the database URL for your Firebase project.
-    |
-    */
-
-    'database_url' => env('FIREBASE_DATABASE_URL'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Firebase Storage Bucket
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the storage bucket for your Firebase project.
-    |
-    */
-
-    'storage_bucket' => env('FIREBASE_STORAGE_BUCKET'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Firebase Auth Guard
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the default Firebase auth guard to be used by your
-    | application. This will be used for authenticating users.
-    |
-    */
-
-    'auth_guard' => env('FIREBASE_AUTH_GUARD', 'firebase'),
+    'projects' => [
+        'app' => [
+            'credentials' => [
+                'file' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase-service-account.json')),
+                'auto_discovery' => true,
+            ],
+            'auth' => [
+                'tenant_id' => null,
+            ],
+            'database' => [
+                'url' => env('FIREBASE_DATABASE_URL'),
+            ],
+            'dynamic_links' => [
+                'default_domain' => null,
+            ],
+            'storage' => [
+                'default_bucket' => env('FIREBASE_STORAGE_BUCKET'),
+            ],
+            'cache_store' => env('FIREBASE_CACHE_STORE', 'file'),
+            'logging' => [
+                'http_log_channel' => null,
+                'http_debug_log_channel' => null,
+            ],
+            'http_client_options' => [
+                'proxy' => null,
+                'timeout' => null,
+            ],
+        ],
+    ],
 ];

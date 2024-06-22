@@ -114,16 +114,16 @@ public function testqueues (Request $request) {
             'title' => 'required|string',
             'body' => 'required|string',
         ]);
-
+    
         $user = User::findOrFail($request->user_id);
-
+    
         if (!$user->fcm_token) {
             return response()->json(['message' => 'User does not have an FCM token'], 404);
         }
-
+    
         $firebase = app('firebase');
         $messaging = $firebase->getMessaging();
-
+    
         $message = [
             'token' => $user->fcm_token,
             'notification' => [
@@ -134,7 +134,7 @@ public function testqueues (Request $request) {
                 'key' => 'value', // Additional data if needed
             ],
         ];
-
+    
         try {
             $messaging->send($message);
             return response()->json(['message' => 'Notification sent successfully']);
@@ -142,7 +142,7 @@ public function testqueues (Request $request) {
             return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
         }
     }
-
+    
 
  
     public function markAsRead($id)
