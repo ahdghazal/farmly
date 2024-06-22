@@ -123,10 +123,10 @@ public function testqueues (Request $request) {
         if (!$user->fcm_token) {
             return response()->json(['message' => 'User does not have an FCM token'], 404);
         }
+        $value = null;
+        $firebase = (new Factory)->withServiceAccount($value);
 
-        $firebase = (new Factory)
-            ->withServiceAccount(config('firebase.projects.app.credentials.file'))
-            ->withDatabaseUri(config('firebase.projects.app.database.url'));
+        
 
         $messaging = $firebase->createMessaging();
 
