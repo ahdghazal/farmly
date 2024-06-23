@@ -37,6 +37,6 @@ return [
 
 
     'firebase' => [
-        'credentials_file' => env('FIREBASE_CREDENTIALS', base_path('config/firebase_credentials.json')),
+        'credentials_file' => env('FIREBASE_CREDENTIALS', base_path('public/firebase_credentials.json')),
     ],
 ];
