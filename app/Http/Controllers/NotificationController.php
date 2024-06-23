@@ -53,47 +53,50 @@ class NotificationController extends Controller
     }
 
     public function sendNotificationToUser(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string',
-            'body' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'title' => 'required|string',
+        'body' => 'required|string',
+    ]);
 
-        $user = Auth::user();
+    $user = User::find($request->user_id);
 
-        if (!$user) {
-            return response()->json(['message' => 'User not authenticated'], 401);
-        }
-
-        if (!$user->fcm_token) {
-            return response()->json(['message' => 'User does not have an FCM token'], 404);
-        }
-
-        $serviceAccountPath = env('FIREBASE_CREDENTIALS');
-    
-        Log::info('FIREBASE_CREDENTIALS path: ' . $serviceAccountPath);
-        
-        if (!$serviceAccountPath) {
-            return response()->json(['message' => 'Firebase service account credentials not found in .env'], 500);
-        }
-    
-        if (!file_exists($serviceAccountPath) || !is_readable($serviceAccountPath)) {
-            return response()->json(['message' => 'Firebase service account credentials file not found or not readable'], 500);
-        }
-        try {
-            $firebase = (new Factory)->withServiceAccount($serviceAccountPath);
-            $messaging = $firebase->createMessaging();
-    
-            $message = CloudMessage::withTarget('token', $user->fcm_token)
-                ->withNotification(FirebaseNotification::create($request->title, $request->body))
-                ->withData(['key' => 'value']); // Additional data if needed
-    
-            $messaging->send($message);
-            return response()->json(['message' => 'Notification sent successfully']);
-        } catch (\Kreait\Firebase\Exception\MessagingException $e) {
-            return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
-        }
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
     }
+
+    if (!$user->fcm_token) {
+        return response()->json(['message' => 'User does not have an FCM token'], 404);
+    }
+
+    $serviceAccountPath = env('FIREBASE_CREDENTIALS');
+    
+    Log::info('FIREBASE_CREDENTIALS path: ' . $serviceAccountPath);
+    
+    if (!$serviceAccountPath) {
+        return response()->json(['message' => 'Firebase service account credentials not found in .env'], 500);
+    }
+
+    if (!file_exists($serviceAccountPath) || !is_readable($serviceAccountPath)) {
+        return response()->json(['message' => 'Firebase service account credentials file not found or not readable'], 500);
+    }
+
+    try {
+        $firebase = (new Factory)->withServiceAccount($serviceAccountPath);
+        $messaging = $firebase->createMessaging();
+
+        $message = CloudMessage::withTarget('token', $user->fcm_token)
+            ->withNotification(FirebaseNotification::create($request->title, $request->body))
+            ->withData(['key' => 'value']); // Additional data if needed
+
+        $messaging->send($message);
+        return response()->json(['message' => 'Notification sent successfully']);
+    } catch (\Kreait\Firebase\Exception\MessagingException $e) {
+        return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
+    }
+}
+
 
     public function testFirebaseCredentials()
     {
