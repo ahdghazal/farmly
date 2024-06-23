@@ -175,7 +175,7 @@ class CommunityController extends Controller
     
         $post = Post::find($postId);
         if ($post && $post->user_id !== Auth::id()) {
-            $this->sendNotificationToUser('reply', $post->user_id, [
+            $this->sendNotificationToUser($request, 'reply', $post->user_id, [
                 'postId' => $postId,
                 'message' => 'Your post received a reply from ' . Auth::user()->name,
             ]);
@@ -197,7 +197,7 @@ class CommunityController extends Controller
     
         $post = Post::find($postId);
         if ($post->user_id !== Auth::id()) {
-            $this->sendNotificationToUser('like', $post->user_id, [
+            $this->sendNotificationToUser($request, 'like', $post->user_id, [
                 'postId' => $postId,
                 'message' => 'Your post was liked by ' . Auth::user()->name,
             ]);
