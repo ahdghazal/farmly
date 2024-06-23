@@ -179,7 +179,8 @@ class CommunityController extends Controller
         if ($post && $post->user_id !== Auth::id()) {
             $this->sendNotificationToUser($request, 'reply', $post->user_id, [
                 'postId' => $postId,
-                'message' => 'Your post received a reply from ' . Auth::user()->name,
+                'postTitle' => $post->title, 
+                'message' => Auth::user()->name . ' replied to your post',
             ]);
         }
     
