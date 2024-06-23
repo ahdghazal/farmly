@@ -9,11 +9,12 @@ class Notification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'type', 'data', 'read'];
-
-    protected $casts = [
-        'data' => 'array',
-        'read' => 'boolean',
+    protected $fillable = [
+        'user_id',
+        'title',
+        'body',
+        'read',
+        'type',
     ];
 
     public function user()
@@ -21,7 +22,4 @@ class Notification extends Model
         return $this->belongsTo(User::class);
     }
 
-    public $timestamps = true;
-
-    protected $table = 'notifications';
 }
