@@ -150,43 +150,46 @@ class CommunityController extends Controller
             $firebase = (new Factory)->withServiceAccount($serviceAccountPath);
             $messaging = $firebase->createMessaging();
     
-            $message = CloudMessage::withTarget('token', $user->fcm_token)
-                ->withNotification(FirebaseNotification::create($request->title, $request->body))
-                ->withData(['key' => 'value']); // Additional data if needed
+            $notificationTitle = $request->title;
+            $notificationBody = $request->body;
     
+            $message = CloudMessage::withTarget('token', $user->fcm_token)
+                ->withNotification(FirebaseNotification::create($notificationTitle, $notificationBody))
+                ->withData($messageData); // Use messageData directly for additional data
+        
             $messaging->send($message);
             return response()->json(['message' => 'Notification sent successfully']);
         } catch (\Kreait\Firebase\Exception\MessagingException $e) {
             return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
         }
     }
-
-
+    
 
     public function replyToPost(Request $request, $postId)
-    {
-        $request->validate([
-            'content' => 'required|string',
+{
+    $request->validate([
+        'content' => 'required|string',
+    ]);
+
+    $reply = Reply::create([
+        'user_id' => Auth::id(),
+        'post_id' => $postId,
+        'content' => $request->input('content'),
+    ]);
+
+    $post = Post::find($postId);
+    if ($post && $post->user_id !== Auth::id()) {
+        $this->sendNotificationToUser($request, 'reply', $post->user_id, [
+            'postId' => $postId,
+            'postTitle' => $post->title,
+            'message' => Auth::user()->name . ' replied to your post',
+            'post_id' => $postId, // Include post_id in the message data
         ]);
-    
-        $reply = Reply::create([
-            'user_id' => Auth::id(),
-            'post_id' => $postId,
-            'content' => $request->input('content'),
-        ]);
-    
-        $post = Post::find($postId);
-        if ($post && $post->user_id !== Auth::id()) {
-            $this->sendNotificationToUser($request, 'reply', $post->user_id, [
-                'postId' => $postId,
-                'postTitle' => $post->title, 
-                'message' => Auth::user()->name . ' replied to your post',
-            ]);
-        }
-    
-        return response()->json($reply->load('user'), 201);
     }
-    
+
+    return response()->json($reply->load('user'), 201);
+}
+
 
 
 
