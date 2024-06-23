@@ -10,9 +10,12 @@ use App\Models\Report;
 use App\Models\SavedPost;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
+use Kreait\Firebase\Factory;
 use App\Models\PostImage;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\NotificationController;
+
 
 
 class CommunityController extends Controller
@@ -109,6 +112,55 @@ class CommunityController extends Controller
         return response()->json($posts, 200);
     }
 
+
+
+    protected function sendNotificationToUser($type, $userId, $messageData)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'title' => 'required|string',
+            'body' => 'required|string',
+        ]);
+    
+        $user = User::find($request->user_id);
+    
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+    
+        if (!$user->fcm_token) {
+            return response()->json(['message' => 'User does not have an FCM token'], 404);
+        }
+    
+        $serviceAccountPath = env('FIREBASE_CREDENTIALS');
+        
+        Log::info('FIREBASE_CREDENTIALS path: ' . $serviceAccountPath);
+        
+        if (!$serviceAccountPath) {
+            return response()->json(['message' => 'Firebase service account credentials not found in .env'], 500);
+        }
+    
+        if (!file_exists($serviceAccountPath) || !is_readable($serviceAccountPath)) {
+            return response()->json(['message' => 'Firebase service account credentials file not found or not readable'], 500);
+        }
+    
+        try {
+            $firebase = (new Factory)->withServiceAccount($serviceAccountPath);
+            $messaging = $firebase->createMessaging();
+    
+            $message = CloudMessage::withTarget('token', $user->fcm_token)
+                ->withNotification(FirebaseNotification::create($request->title, $request->body))
+                ->withData(['key' => 'value']); // Additional data if needed
+    
+            $messaging->send($message);
+            return response()->json(['message' => 'Notification sent successfully']);
+        } catch (\Kreait\Firebase\Exception\MessagingException $e) {
+            return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+
+
     public function replyToPost(Request $request, $postId)
     {
         $request->validate([
@@ -123,7 +175,7 @@ class CommunityController extends Controller
 
         $post = Post::find($postId);
         if ($post->user_id !== Auth::id()) {
-            app(NotificationController::class)->sendNotificationToUser('reply', $post->user_id, [
+            $this->sendNotificationToUser('reply', $post->user_id, [
                 'postId' => $postId,
                 'message' => 'Your post received a reply from ' . Auth::user()->name,
             ]);
@@ -141,7 +193,7 @@ class CommunityController extends Controller
 
         $post = Post::find($postId);
         if ($post->user_id !== Auth::id()) {
-            app(NotificationController::class)->sendNotificationToUser('like', $post->user_id, [
+            $this->sendNotificationToUser('like', $post->user_id, [
                 'postId' => $postId,
                 'message' => 'Your post was liked by ' . Auth::user()->name,
             ]);
