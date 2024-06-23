@@ -347,4 +347,22 @@ public function reportPost(Request $request, $postId)
 
     return response()->json(['message' => 'Post reported successfully.'], 200);
 }
+
+public function getPostById($postId)
+    {
+        // Fetch the post with its related data
+        $post = Post::with(['user', 'likes', 'replies.user', 'images'])->find($postId);
+
+        // Check if the post exists
+        if (!$post) {
+            return response()->json(['error' => 'Post not found'], 404);
+        }
+
+        // Add fields indicating whether the current user has liked or saved the post
+        $post->is_liked_by_user = $post->likes->contains('user_id', Auth::id());
+        $post->is_saved_by_user = $post->savedPosts->contains('user_id', Auth::id());
+
+        // Return the post data
+        return response()->json($post, 200);
+    }
 }

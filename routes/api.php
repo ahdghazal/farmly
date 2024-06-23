@@ -90,6 +90,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::get('/searchPosts', [CommunityController::class, 'searchPosts']);
     Route::delete('/deletePost/{postId}', [CommunityController::class, 'deletePost']);
     Route::post('report/{postId}', [CommunityController::class, 'reportPost']);
+    Route::get('/posts/{postId}', [CommunityController::class, 'getPostById']);
 
 
     //for app user side chat implementation
