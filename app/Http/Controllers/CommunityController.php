@@ -166,24 +166,24 @@ class CommunityController extends Controller
         $request->validate([
             'content' => 'required|string',
         ]);
-
+    
         $reply = Reply::create([
             'user_id' => Auth::id(),
             'post_id' => $postId,
-            'content' => $request->input('content'), 
+            'content' => $request->input('content'),
         ]);
-
+    
         $post = Post::find($postId);
-
         if ($post && $post->user_id !== Auth::id()) {
             $this->sendNotificationToUser('reply', $post->user_id, [
                 'postId' => $postId,
                 'message' => 'Your post received a reply from ' . Auth::user()->name,
             ]);
         }
-
+    
         return response()->json($reply->load('user'), 201);
     }
+    
 
 
 
