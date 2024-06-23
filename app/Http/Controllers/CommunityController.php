@@ -170,11 +170,12 @@ class CommunityController extends Controller
         $reply = Reply::create([
             'user_id' => Auth::id(),
             'post_id' => $postId,
-            'content' => $request->content,
+            'content' => $request->input('content'), 
         ]);
 
         $post = Post::find($postId);
-        if ($post->user_id !== Auth::id()) {
+
+        if ($post && $post->user_id !== Auth::id()) {
             $this->sendNotificationToUser('reply', $post->user_id, [
                 'postId' => $postId,
                 'message' => 'Your post received a reply from ' . Auth::user()->name,
@@ -184,13 +185,16 @@ class CommunityController extends Controller
         return response()->json($reply->load('user'), 201);
     }
 
-    public function likePost($postId)
+
+
+    public function likePost(Request $request, $postId)
     {
+    
         $like = Like::firstOrCreate([
             'user_id' => Auth::id(),
             'post_id' => $postId,
         ]);
-
+    
         $post = Post::find($postId);
         if ($post->user_id !== Auth::id()) {
             $this->sendNotificationToUser('like', $post->user_id, [
@@ -198,10 +202,10 @@ class CommunityController extends Controller
                 'message' => 'Your post was liked by ' . Auth::user()->name,
             ]);
         }
-
+    
         return response()->json($like, 200);
     }
-
+    
 
     public function unlikePost($postId)
     {
