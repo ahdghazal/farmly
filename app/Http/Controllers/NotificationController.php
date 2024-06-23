@@ -98,6 +98,8 @@ public function testFirebaseCredentials()
 {
     $serviceAccountPath = env('FIREBASE_CREDENTIALS');
 
+    Log::info('FIREBASE_CREDENTIALS path: ' . $serviceAccountPath);
+
     if (!$serviceAccountPath) {
         return response()->json(['message' => 'Firebase service account credentials not found in .env'], 500);
     }
@@ -108,6 +110,7 @@ public function testFirebaseCredentials()
 
     return response()->json(['message' => 'Firebase service account credentials are accessible']);
 }
+
 
 
 
