@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
 use App\Models\PostImage;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\NotificationController;
 
 
 class CommunityController extends Controller
@@ -108,6 +109,29 @@ class CommunityController extends Controller
         return response()->json($posts, 200);
     }
 
+    public function replyToPost(Request $request, $postId)
+    {
+        $request->validate([
+            'content' => 'required|string',
+        ]);
+
+        $reply = Reply::create([
+            'user_id' => Auth::id(),
+            'post_id' => $postId,
+            'content' => $request->content,
+        ]);
+
+        $post = Post::find($postId);
+        if ($post->user_id !== Auth::id()) {
+            app(NotificationController::class)->sendNotificationToUser('reply', $post->user_id, [
+                'postId' => $postId,
+                'message' => 'Your post received a reply from ' . Auth::user()->name,
+            ]);
+        }
+
+        return response()->json($reply->load('user'), 201);
+    }
+
     public function likePost($postId)
     {
         $like = Like::firstOrCreate([
@@ -117,15 +141,15 @@ class CommunityController extends Controller
 
         $post = Post::find($postId);
         if ($post->user_id !== Auth::id()) {
-            Notification::create([
-                'user_id' => $post->user_id,
-                'type' => 'like',
-                'data' => 'Your post was liked by ' . Auth::user()->name,
+            app(NotificationController::class)->sendNotificationToUser('like', $post->user_id, [
+                'postId' => $postId,
+                'message' => 'Your post was liked by ' . Auth::user()->name,
             ]);
         }
 
         return response()->json($like, 200);
     }
+
 
     public function unlikePost($postId)
     {
@@ -165,29 +189,6 @@ class CommunityController extends Controller
         return response()->json(null, 204);
     }
 
-    public function replyToPost(Request $request, $postId)
-    {
-        $request->validate([
-            'content' => 'required|string',
-        ]);
-
-        $reply = Reply::create([
-            'user_id' => Auth::id(),
-            'post_id' => $postId,
-            'content' => $request->content,
-        ]);
-
-        $post = Post::find($postId);
-        if ($post->user_id !== Auth::id()) {
-            Notification::create([
-                'user_id' => $post->user_id,
-                'type' => 'reply',
-                'data' => 'Your post received a reply from ' . Auth::user()->name,
-            ]);
-        }
-
-        return response()->json($reply->load('user'), 201);
-    }
 
     public function deleteReply($replyId)
     {
