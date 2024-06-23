@@ -114,7 +114,7 @@ class CommunityController extends Controller
 
 
 
-    protected function sendNotificationToUser($type, $userId, $messageData)
+    protected function sendNotificationToUser(Request $request, $type, $userId, $messageData)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
