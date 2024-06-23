@@ -193,25 +193,25 @@ class CommunityController extends Controller
 
 
 
-    public function likePost(Request $request, $postId)
-    {
-    
-        $like = Like::firstOrCreate([
-            'user_id' => Auth::id(),
-            'post_id' => $postId,
+public function likePost(Request $request, $postId)
+{
+    $like = Like::firstOrCreate([
+        'user_id' => Auth::id(),
+        'post_id' => $postId,
+    ]);
+
+    $post = Post::find($postId);
+    if ($post->user_id !== Auth::id()) {
+        $this->sendNotificationToUser($request, 'like', $post->user_id, [
+            'postId' => $postId,
+            'message' => Auth::user()->name . ' liked your post',
+            'post_id' => $postId, // Include post_id in the message data
         ]);
-    
-        $post = Post::find($postId);
-        if ($post->user_id !== Auth::id()) {
-            $this->sendNotificationToUser($request, 'like', $post->user_id, [
-                'postId' => $postId,
-                'message' => 'Your post was liked by ' . Auth::user()->name,
-            ]);
-        }
-    
-        return response()->json($like, 200);
     }
-    
+
+    return response()->json($like, 200);
+}
+
 
     public function unlikePost($postId)
     {
