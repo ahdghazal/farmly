@@ -6,30 +6,12 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Pusher\Pusher;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 use Kreait\Firebase\Factory;
-use Kreait\Firebase\ServiceAccount;
-use GuzzleHttp\Client;
 
 class NotificationController extends Controller
 {
-    protected $pusher;
-
-    public function __construct()
-    {
-        $this->pusher = new Pusher(
-            env('PUSHER_APP_KEY'),
-            env('PUSHER_APP_SECRET'),
-            env('PUSHER_APP_ID'),
-            [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'useTLS' => true
-            ]
-        );
-    }
-
     public function getNotifications()
     {
         $user = Auth::user();
@@ -55,30 +37,38 @@ class NotificationController extends Controller
 
     public function createNotification(Request $request)
     {
-        $notification = Notification::create($request->all());
+        $user = Auth::user();
 
-        // Send Pusher notification
-        $this->sendPusherNotification($notification);
+        $notification = Notification::create([
+            'user_id' => $user->id,
+            'title' => $request->title,
+            'body' => $request->body,
+            'read' => false,
+        ]);
+
+        // Send Firebase notification
+        $this->sendFirebaseNotification($notification);
 
         return response()->json($notification, 201);
     }
 
-
-
     public function sendNotificationToUser(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
             'title' => 'required|string',
             'body' => 'required|string',
         ]);
-    
-        $user = User::findOrFail($request->user_id);
-    
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
         if (!$user->fcm_token) {
             return response()->json(['message' => 'User does not have an FCM token'], 404);
         }
-    
+
         $serviceAccountPath = env('FIREBASE_CREDENTIALS');
     
         Log::info('FIREBASE_CREDENTIALS path: ' . $serviceAccountPath);
@@ -105,9 +95,6 @@ class NotificationController extends Controller
         }
     }
 
-
-
-
     public function testFirebaseCredentials()
     {
         $serviceAccountPath = env('FIREBASE_CREDENTIALS');
@@ -122,9 +109,6 @@ class NotificationController extends Controller
     
         return response()->json(['message' => 'Firebase service account credentials are accessible']);
     }
-
-
-
 
     public function markAsRead($id)
     {
@@ -142,21 +126,35 @@ class NotificationController extends Controller
         return response()->json(['unread_count' => $unreadCount], 200);
     }
 
-    protected function sendPusherNotification($notification)
+    protected function sendFirebaseNotification($notification)
     {
         $user = User::find($notification->user_id);
 
-        if ($user) {
-            $notificationData = [
-                'id' => $notification->id,
-                'title' => $notification->title,
-                'body' => $notification->body,
-                'read' => $notification->read,
-                'created_at' => $notification->created_at->toDateTimeString(),
-                'updated_at' => $notification->updated_at->toDateTimeString(),
-            ];
+        if ($user && $user->fcm_token) {
+            $serviceAccountPath = env('FIREBASE_CREDENTIALS');
+        
+            Log::info('FIREBASE_CREDENTIALS path: ' . $serviceAccountPath);
+            
+            if (!$serviceAccountPath) {
+                return response()->json(['message' => 'Firebase service account credentials not found in .env'], 500);
+            }
+        
+            if (!file_exists($serviceAccountPath) || !is_readable($serviceAccountPath)) {
+                return response()->json(['message' => 'Firebase service account credentials file not found or not readable'], 500);
+            }
 
-            $this->pusher->trigger('user-' . $user->id, 'notification', $notificationData);
+            try {
+                $firebase = (new Factory)->withServiceAccount($serviceAccountPath);
+                $messaging = $firebase->createMessaging();
+        
+                $message = CloudMessage::withTarget('token', $user->fcm_token)
+                    ->withNotification(FirebaseNotification::create($notification->title, $notification->body))
+                    ->withData(['key' => 'value']); // Additional data if needed
+        
+                $messaging->send($message);
+            } catch (\Kreait\Firebase\Exception\MessagingException $e) {
+                Log::error('Failed to send Firebase notification', ['error' => $e->getMessage()]);
+            }
         }
     }
 }
