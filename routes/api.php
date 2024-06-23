@@ -109,6 +109,10 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
     Route::post('/send-notification-to-user', [NotificationController::class, 'sendNotificationToUser']);
 
+    Route::get('/test-firebase-credentials', [NotificationController::class, 'testFirebaseCredentials']);
+
+
+
     Route::get('/send-watering-reminders', [ReminderController::class, 'sendWateringReminders']);
     Route::get('/send-pruning-reminders', [ReminderController::class, 'sendPruningReminders']);
 
