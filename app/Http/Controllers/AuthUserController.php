@@ -387,51 +387,62 @@ public function updateProfile(Request $request)
 
 public function uploadPicture(Request $request)
 {
+    // Validate the request data
     $validator = Validator::make($request->all(), [
         'picture' => 'required|string',
         'picture_name' => 'required|string',
     ]);
 
+    // If validation fails, return the errors
     if ($validator->fails()) {
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
+    // Get the base64 encoded picture and the authenticated user's ID
     $encodedPicture = $request->picture;
     $userId = auth()->id();
 
-    $filePath = $this->saveBase64ImageUser($encodedPicture, $userId);
+    // Save the base64 encoded picture
+    try {
+        $filePath = $this->saveBase64ImageUser($encodedPicture, $userId);
 
+        // Update the user's picture attribute
+        $user = auth()->user();
+        $user->picture = $filePath;
+        $user->save();
 
-    $user = auth()->user();
-    $user->picture = $filePath;
-    $user->save();
-
-    return response()->json(['picture_path' => $filePath], 201);
+        // Return the file path of the uploaded picture
+        return response()->json(['picture_path' => $filePath], 201);
+    } catch (Exception $e) {
+        // Log the error and return a JSON response with an error message
+        Log::error('Failed to save image: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to save image.'], 500);
+    }
 }
 
 private function saveBase64ImageUser($imageData, $userId)
 {
-    try {
-        $decodedImage = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageData));
+    // Decode the base64 encoded image
+    $decodedImage = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageData));
 
-        $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
+    // Generate a unique file name
+    $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
 
-        $directory = 'userPictures';
-        $filePath = $directory . '/' . $fileName;
+    // Define the directory to save the image
+    $filePath = 'userPictures/' . $fileName;
 
-        if (!file_exists($directory)) {
-            mkdir($directory, 0775, true);
-        }
-
-        if (file_put_contents($filePath, $decodedImage) === false) {
-            throw new Exception("Failed to save the file.");
-        }
-
-        return $filePath;
-    } catch (Exception $e) {
-        Log::error('Failed to save image: ' . $e->getMessage());
-        return response()->json(['error' => 'Failed to save image.'], 500);
+    // Create the directory if it doesn't exist
+    if (!file_exists($directory)) {
+        mkdir($directory, 0775, true);
     }
+
+    // Save the decoded image to the file system
+    if (file_put_contents($filePath, $decodedImage) === false) {
+        throw new Exception("Failed to save the file.");
+    }
+
+    // Return the file path of the saved image
+    return $filePath;
 }
 
 
