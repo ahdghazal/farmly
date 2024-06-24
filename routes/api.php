@@ -113,9 +113,11 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::get('/test-firebase-credentials', [NotificationController::class, 'testFirebaseCredentials']);
 
 
-
-    Route::get('/send-watering-reminders', [ReminderController::class, 'sendWateringReminders']);
-    Route::get('/send-pruning-reminders', [ReminderController::class, 'sendPruningReminders']);
+    Route::get('/reminders/water', [ReminderController::class, 'sendWateringReminders']);
+    Route::get('/reminders/prune', [ReminderController::class, 'sendPruningReminders']);
+    Route::post('/reminders/confirm', [ReminderController::class, 'confirmTaskDone']);
+    Route::get('/reminders', [ReminderController::class, 'getPendingReminders']);
+    Route::get('/garden/{gardenId}/plants/needs', [ReminderController::class, 'getGardenPlantsNeeds']);
 
 
     //homepage

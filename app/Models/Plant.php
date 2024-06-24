@@ -52,4 +52,30 @@ class Plant extends Model
     {
         return $this->belongsToMany(Garden::class)->withPivot('spacing', 'quantity')->withTimestamps();
     }
+
+    public function calculateNextWateringDate()
+{
+    $interval = match (strtolower($this->water_need)) {
+        'high' => 2,
+        'moderate' => 4,
+        'low' => 7,
+        default => null,
+    };
+
+    return $interval ? now()->addDays($interval) : null;
+}
+
+public function calculateNextPruningDate()
+{
+    $interval = match (strtolower($this->pruning)) {
+        'annually' => 365,
+        'regularly' => 30,
+        'weekly' => 7,
+        'no', 'as needed' => null,
+        default => null,
+    };
+
+    return $interval ? now()->addDays($interval) : null;
+}
+
 }
