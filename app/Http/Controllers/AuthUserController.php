@@ -429,7 +429,8 @@ private function saveBase64ImageUser($imageData, $userId)
     $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
 
     // Define the directory to save the image
-    $filePath = 'userPictures/' . $fileName;
+    $directory = 'userPictures/';
+    $filePath = $directory . $fileName;
 
     // Create the directory if it doesn't exist
     if (!file_exists($directory)) {
