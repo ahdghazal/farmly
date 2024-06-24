@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\Notification;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 use Kreait\Firebase\Factory;
@@ -16,7 +17,6 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
     
-        // Log the user for debugging
         Log::info('Authenticated user:', ['user' => $user]);
     
         if (!$user) {
@@ -25,7 +25,6 @@ class NotificationController extends Controller
     
         $notifications = Notification::where('user_id', $user->id)->get();
     
-        // Log the notifications for debugging
         Log::info('Notifications retrieved:', ['notifications' => $notifications]);
     
         if ($notifications->isEmpty()) {

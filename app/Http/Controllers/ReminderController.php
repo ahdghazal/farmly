@@ -46,7 +46,6 @@ class ReminderController extends Controller
                     }
     
                     if ($interval > 0) {
-                        // Pass the correct arguments to scheduleReminder
                         $this->scheduleReminder(request(), $user, $garden, $plantEntry, 'water', $interval);
                     }
                 }
@@ -118,7 +117,10 @@ class ReminderController extends Controller
         $nextReminderDate = $lastReminder->created_at->addDays($interval);
     }
 
-    if (now()->greaterThanOrEqualTo($nextReminderDate)) {
+    if (!$lastReminder->task_done) {
+        // Reschedule reminder in 6 hours if the task was not done
+        $this->rescheduleReminder($reminder, 6);
+    } else if (now()->greaterThanOrEqualTo($nextReminderDate)) {
         $this->sendReminder($user, $plantEntry->plant, $taskType);
 
         $reminder = Reminder::create([
@@ -163,17 +165,11 @@ class ReminderController extends Controller
     {
         $request->validate([
             'reminder_id' => 'required|exists:reminders,id',
-            'task_done' => 'required|boolean',
         ]);
 
         $reminder = Reminder::find($request->reminder_id);
-        $reminder->task_done = $request->task_done;
+        $reminder->task_done = true;
         $reminder->save();
-
-        if (!$request->task_done) {
-            // Reschedule reminder in 6 hours if the task was not done
-            $this->rescheduleReminder($reminder, 6);
-        }
 
         return response()->json(['message' => 'Task confirmation updated successfully.'], 200);
     }
