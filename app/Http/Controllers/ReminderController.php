@@ -125,10 +125,10 @@ class ReminderController extends Controller
             'user_id' => $user->id,
             'garden_id' => $garden->id,
             'garden_plant_entry_id' => $plantEntry->id,
-            'plant_entry_id' => $plantEntry->id, 
+            'plant_entry_id' => $request->plant_entry_id,
             'task_type' => $taskType,
             'task_done' => 0,
-        ]);
+        ]);        
 
     }
 }
