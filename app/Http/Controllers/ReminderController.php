@@ -100,7 +100,7 @@ class ReminderController extends Controller
      * @param string $taskType
      * @param int $interval
      */
-    protected function scheduleReminder($user, $garden, $plantEntry, $taskType, $interval)
+    protected function scheduleReminder(Request $request, $user, $garden, $plantEntry, $taskType, $interval)
     {
         $lastReminder = Reminder::where('user_id', $user->id)
             ->where('garden_id', $garden->id)
