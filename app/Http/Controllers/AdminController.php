@@ -384,7 +384,7 @@ public function addAnnouncement(Request $request)
         'admin_id' => Auth::id(),
     ]);
 
-    $nonAdminUsers = User::where('isAdmin', false)->get();
+    $nonAdminUsers = User::where('is_admin', false)->get();
 
     foreach ($nonAdminUsers as $user) {
         $messageData = [
