@@ -46,7 +46,7 @@ class ReminderController extends Controller
                     }
 
                     if ($interval > 0) {
-                        $this->scheduleReminder($user, $garden, $plantEntry, 'water', $interval);
+                        $this->scheduleReminder(request(), $user, $garden, $plantEntry, 'water', $interval);
                     }
                 }
             }
@@ -100,7 +100,7 @@ class ReminderController extends Controller
      * @param string $taskType
      * @param int $interval
      */
-    protected function scheduleReminder(Request $request, $user, $garden, $plantEntry, $taskType, $interval)
+    protected function scheduleReminder($request, $user, $garden, $plantEntry, $taskType, $interval)
     {
         $lastReminder = Reminder::where('user_id', $user->id)
             ->where('garden_id', $garden->id)
