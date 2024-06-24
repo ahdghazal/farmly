@@ -9,7 +9,7 @@ class Reminder extends Model
     protected $fillable = [
         'user_id',
         'garden_id',
-        'plant_entry_id',
+        'garden_plant_entry_id',
         'task_type',
         'task_done',
     ];
