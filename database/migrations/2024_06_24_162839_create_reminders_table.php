@@ -15,9 +15,9 @@ class CreateRemindersTable extends Migration
     {
         Schema::create('reminders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('garden_id')->constrained('gardens')->onDelete('cascade');
-            $table->foreignId('plant_entry_id')->constrained('garden_plant_entries')->onDelete('cascade');
+            $table->foreignId('user_id')->references('id')->on('users')->constrained()->onDelete('cascade');
+            $table->foreignId('garden_id')->references('id')->on('gardens')->constrained()->onDelete('cascade');
+            $table->foreignId('garden_plant_entry_id')->references('id')->on('garden_plant_entries')->constrained()->onDelete('cascade');
             $table->enum('task_type', ['water', 'prune']);
             $table->boolean('task_done')->default(false);
             $table->timestamps();

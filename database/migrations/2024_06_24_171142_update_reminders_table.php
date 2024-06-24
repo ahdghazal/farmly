@@ -31,12 +31,7 @@ class UpdateRemindersTable extends Migration
     public function down()
     {
         Schema::table('reminders', function (Blueprint $table) {
-            if (Schema::hasColumn('reminders', 'garden_plant_entry_id')) {
-                $table->dropColumn('garden_plant_entry_id');
-            }
-            if (Schema::hasColumn('reminders', 'plant_entry_id')) {
-                $table->dropColumn('plant_entry_id');
-            }
+        
         });
     }
 }
