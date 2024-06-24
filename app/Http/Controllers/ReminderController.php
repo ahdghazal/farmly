@@ -221,30 +221,40 @@ class ReminderController extends Controller
     public function getGardenPlantsNeeds($gardenId)
     {
         $garden = Garden::findOrFail($gardenId);
-
+    
         $waterNeeds = [];
         $pruneNeeds = [];
-
+    
         foreach ($garden->plantEntries as $plantEntry) {
             $plant = $plantEntry->plant;
-
+    
             $waterNeed = strtolower($plant->water_need);
             $pruneNeed = strtolower($plant->pruning);
-
+    
             if ($waterNeed === 'high' || $waterNeed === 'moderate' || $waterNeed === 'low') {
                 $waterNeeds[] = $plant;
             }
-
+    
             if ($pruneNeed === 'annually' || $pruneNeed === 'regularly' || $pruneNeed === 'weekly') {
                 $pruneNeeds[] = $plant;
             }
         }
-
+    
+        $waterNeedsCount = count($waterNeeds);
+        $pruneNeedsCount = count($pruneNeeds);
+    
         return response()->json([
-            'water_needs' => $waterNeeds,
-            'prune_needs' => $pruneNeeds,
+            'water_needs' => [
+                'plants' => $waterNeeds,
+                'count' => $waterNeedsCount,
+            ],
+            'prune_needs' => [
+                'plants' => $pruneNeeds,
+                'count' => $pruneNeedsCount,
+            ],
         ], 200);
     }
+    
 
     /**
      * Send Firebase notification.
