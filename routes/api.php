@@ -131,7 +131,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/admin/change-password', [AdminController::class, 'changePassword']); //done
     Route::get('/admin/showProfile', [AdminController::class, 'showProfile']); //done
     Route::put('/admin/updateProfile', [AdminController::class, 'updateProfile']); //done
-    Route::post('/admin/upload-picture', [AdminController::class, 'uploadPicture']); //done
+    Route::post('/admin/uploadPicture', [AuthUserController::class, 'uploadPicture']);//done
     
     // User and post management routes
     Route::delete('/admin/deleteUser/{id}', [AdminController::class, 'deleteUser']); //done
