@@ -63,13 +63,7 @@ class MessageController extends Controller
                 ->withData($messageData); // Use messageData directly for additional data
         
             $messaging->send($message);
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => $request->title,
-                'body' => $request->body,
-                'read' => false, // Assuming unread when first created
-                'type' => 'general', // Or whatever type is appropriate
-            ]);
+            
             return response()->json(['message' => 'Notification sent successfully']);
         } catch (\Kreait\Firebase\Exception\MessagingException $e) {
             return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
