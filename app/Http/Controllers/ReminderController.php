@@ -118,13 +118,15 @@ class ReminderController extends Controller
         if (now()->greaterThanOrEqualTo($nextReminderDate)) {
             $this->sendReminder($user, $plantEntry->plant, $taskType);
 
-            Reminder::create([
-                'user_id' => $user->id,
-                'garden_id' => $garden->id,
-                'garden_plant_entry_id' => $plantEntry->id,
-                'task_type' => $taskType,
-                'task_done' => false,
+            $reminder = Reminder::create([
+                'user_id' => $request->user_id,
+                'garden_id' => $request->garden_id,
+                'garden_plant_entry_id' => $request->garden_plant_entry_id,
+                'plant_entry_id' => $request->plant_entry_id, 
+                'task_type' => $request->task_type,
+                'task_done' => 0,
             ]);
+        
         }
     }
 
