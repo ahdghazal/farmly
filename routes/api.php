@@ -43,6 +43,8 @@ Route::post('/verify', [AuthUserController::class, 'verify']); //done
 Route::post('/resendCode', [AuthUserController::class, 'resendCode']); //done
 Route::post('/sendResetPasswordOTP', [AuthUserController::class, 'sendResetPasswordOTP']);//done
 Route::post('/resetPassword', [AuthUserController::class, 'resetPassword']);//done
+Route::get('/reminders/water', [ReminderController::class, 'sendWateringReminders']);
+Route::get('/reminders/prune', [ReminderController::class, 'sendPruningReminders']);
 
 Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::post('/logout', [AuthUserController::class, 'logout']); //done
@@ -113,8 +115,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::get('/test-firebase-credentials', [NotificationController::class, 'testFirebaseCredentials']);
 
 
-    Route::get('/reminders/water', [ReminderController::class, 'sendWateringReminders']);
-    Route::get('/reminders/prune', [ReminderController::class, 'sendPruningReminders']);
+
     Route::post('/reminders/confirm', [ReminderController::class, 'confirmTaskDone']);
     Route::get('/reminders', [ReminderController::class, 'getPendingReminders']);
     Route::get('/garden/{gardenId}/plants/needs', [ReminderController::class, 'getGardenPlantsNeeds']);
