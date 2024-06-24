@@ -27,16 +27,16 @@ class ReminderController extends Controller
     public function sendWateringReminders()
     {
         $users = User::all();
-
+    
         foreach ($users as $user) {
             $gardens = Garden::where('user_id', $user->id)->get();
-
+    
             foreach ($gardens as $garden) {
                 foreach ($garden->plantEntries as $plantEntry) {
                     $plant = $plantEntry->plant;
                     $waterNeed = strtolower($plant->water_need);
                     $interval = 0;
-
+    
                     if ($waterNeed === 'high') {
                         $interval = 2;
                     } elseif ($waterNeed === 'moderate') {
@@ -44,16 +44,18 @@ class ReminderController extends Controller
                     } elseif ($waterNeed === 'low') {
                         $interval = 7;
                     }
-
+    
                     if ($interval > 0) {
+                        // Pass the correct arguments to scheduleReminder
                         $this->scheduleReminder(request(), $user, $garden, $plantEntry, 'water', $interval);
                     }
                 }
             }
         }
-
+    
         return response()->json(['message' => 'Watering reminders sent successfully.'], 200);
     }
+    
 
     /**
      * Send pruning reminders.
@@ -63,16 +65,16 @@ class ReminderController extends Controller
     public function sendPruningReminders()
     {
         $users = User::all();
-
+    
         foreach ($users as $user) {
             $gardens = Garden::where('user_id', $user->id)->get();
-
+    
             foreach ($gardens as $garden) {
                 foreach ($garden->plantEntries as $plantEntry) {
                     $plant = $plantEntry->plant;
                     $pruning = strtolower($plant->pruning);
                     $interval = 0;
-
+    
                     if ($pruning === 'annually') {
                         $interval = 365;
                     } elseif ($pruning === 'regularly') {
@@ -80,16 +82,17 @@ class ReminderController extends Controller
                     } elseif ($pruning === 'weekly') {
                         $interval = 7;
                     }
-
+    
                     if ($interval > 0) {
-                        $this->scheduleReminder($user, $garden, $plantEntry, 'prune', $interval);
+                        $this->scheduleReminder(request(), $user, $garden, $plantEntry, 'prune', $interval);
                     }
                 }
             }
         }
-
+    
         return response()->json(['message' => 'Pruning reminders sent successfully.'], 200);
     }
+    
 
     /**
      * Schedule a reminder.
@@ -101,34 +104,35 @@ class ReminderController extends Controller
      * @param int $interval
      */
     protected function scheduleReminder($request, $user, $garden, $plantEntry, $taskType, $interval)
-    {
-        $lastReminder = Reminder::where('user_id', $user->id)
-            ->where('garden_id', $garden->id)
-            ->where('garden_plant_entry_id', $plantEntry->id)
-            ->where('task_type', $taskType)
-            ->latest()
-            ->first();
+{
+    $lastReminder = Reminder::where('user_id', $user->id)
+        ->where('garden_id', $garden->id)
+        ->where('garden_plant_entry_id', $plantEntry->id)
+        ->where('task_type', $taskType)
+        ->latest()
+        ->first();
 
-        $nextReminderDate = now();
+    $nextReminderDate = now();
 
-        if ($lastReminder) {
-            $nextReminderDate = $lastReminder->created_at->addDays($interval);
-        }
-
-        if (now()->greaterThanOrEqualTo($nextReminderDate)) {
-            $this->sendReminder($user, $plantEntry->plant, $taskType);
-
-            $reminder = Reminder::create([
-                'user_id' => $request->user_id,
-                'garden_id' => $request->garden_id,
-                'garden_plant_entry_id' => $request->garden_plant_entry_id,
-                'plant_entry_id' => $request->plant_entry_id, 
-                'task_type' => $request->task_type,
-                'task_done' => 0,
-            ]);
-        
-        }
+    if ($lastReminder) {
+        $nextReminderDate = $lastReminder->created_at->addDays($interval);
     }
+
+    if (now()->greaterThanOrEqualTo($nextReminderDate)) {
+        $this->sendReminder($user, $plantEntry->plant, $taskType);
+
+        $reminder = Reminder::create([
+            'user_id' => $user->id,
+            'garden_id' => $garden->id,
+            'garden_plant_entry_id' => $plantEntry->id,
+            'plant_entry_id' => $plantEntry->id, 
+            'task_type' => $taskType,
+            'task_done' => 0,
+        ]);
+
+    }
+}
+
 
     /**
      * Send reminder notification to the user.
