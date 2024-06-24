@@ -372,21 +372,31 @@ public function addPost(Request $request)
 }
 
 public function addAnnouncement(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'message' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'message' => 'required|string',
+    ]);
 
-        $announcement = Announcement::create([
-            'title' => $request->title,
-            'message' => $request->message,
-            'admin_id' => Auth::id(),
-        ]);
+    $announcement = Announcement::create([
+        'title' => $request->title,
+        'message' => $request->message,
+        'admin_id' => Auth::id(),
+    ]);
 
-        return response()->json($announcement, 201);
+    $nonAdminUsers = User::where('isAdmin', false)->get();
+
+    foreach ($nonAdminUsers as $user) {
+        $messageData = [
+            'type' => 'announcement',
+            'announcement_id' => $announcement->id,
+        ];
+
+        $this->sendNotificationToUser($request, 'announcement', $user->id, $messageData);
     }
 
+    return response()->json($announcement, 201);
+}
 
     public function createAdminPost(Request $request)
     {
@@ -781,5 +791,59 @@ public function searchPostsByContent(Request $request)
 
     return response()->json($response, 200);
 }
+
+
+
+
+
+
+protected function sendNotificationToUser(Request $request, $type, $userId, $messageData)
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'title' => 'required|string',
+        'body' => 'required|string',
+    ]);
+
+    $user = User::find($request->user_id);
+
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
+    }
+
+    if (!$user->fcm_token) {
+        return response()->json(['message' => 'User does not have an FCM token'], 404);
+    }
+
+    $serviceAccountPath = env('FIREBASE_CREDENTIALS');
+    
+    Log::info('FIREBASE_CREDENTIALS path: ' . $serviceAccountPath);
+    
+    if (!$serviceAccountPath) {
+        return response()->json(['message' => 'Firebase service account credentials not found in .env'], 500);
+    }
+
+    if (!file_exists($serviceAccountPath) || !is_readable($serviceAccountPath)) {
+        return response()->json(['message' => 'Firebase service account credentials file not found or not readable'], 500);
+    }
+
+    try {
+        $firebase = (new Factory)->withServiceAccount($serviceAccountPath);
+        $messaging = $firebase->createMessaging();
+
+        $notificationTitle = $request->title;
+        $notificationBody = $request->body;
+
+        $message = CloudMessage::withTarget('token', $user->fcm_token)
+            ->withNotification(FirebaseNotification::create($notificationTitle, $notificationBody))
+            ->withData($messageData); // Use messageData directly for additional data
+    
+        $messaging->send($message);
+        return response()->json(['message' => 'Notification sent successfully']);
+    } catch (\Kreait\Firebase\Exception\MessagingException $e) {
+        return response()->json(['message' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
+    }
+}
+
 
 }
