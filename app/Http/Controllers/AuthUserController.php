@@ -19,6 +19,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\DBAL\TimestampType;
 use Illuminate\Support\Str;
 use App\Mail\ResetPasswordOTP;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Conversation;
 use App\Events\UserVerified;
