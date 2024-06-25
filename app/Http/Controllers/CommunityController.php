@@ -191,7 +191,7 @@ class CommunityController extends Controller
                 'user_id' => $post->user_id,
                 'type' => 'reply',
                 'title' => 'New reply to your post',
-                'body' => $notificationData['message'],
+                'data' => $notificationData['message'],
                 'read' => false,
             ]);
         }
@@ -224,7 +224,7 @@ class CommunityController extends Controller
                 'user_id' => $post->user_id,
                 'type' => 'like',
                 'title' => 'Your post was liked',
-                'body' => $notificationData['message'],
+                'data' => $notificationData['message'],
                 'read' => false,
             ]);
         }
