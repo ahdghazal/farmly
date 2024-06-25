@@ -19,7 +19,7 @@ class MarketPlaceController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'description' => 'required|string',
-            'picture' => 'nullable|picture|max:2048',
+            'picture' => 'nullable',
         ]);
 
         $product = new Product([
@@ -43,7 +43,7 @@ class MarketPlaceController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'description' => 'required|string',
-            'picture' => 'nullable|picture|max:2048',
+            'picture' => 'nullable',
         ]);
 
         $product = Product::findOrFail($id);
