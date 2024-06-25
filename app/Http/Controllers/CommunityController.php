@@ -183,21 +183,21 @@ class CommunityController extends Controller
                 'postId' => $postId,
                 'postTitle' => $post->title,
                 'message' => Auth::user()->name . ' replied to your post',
+                'post_id' => $postId,
             ];
-    
             $this->sendNotificationToUser($request, 'reply', $post->user_id, $notificationData);
     
             Notification::create([
                 'user_id' => $post->user_id,
                 'type' => 'reply',
-                'title' => 'New reply to your post',
-                'data' => $notificationData['message'],
-                'read' => false,
+                'title' => $notificationData['message'],
+                'data' => json_encode($notificationData),
             ]);
         }
     
         return response()->json($reply->load('user'), 201);
     }
+    
     
 
 
@@ -211,26 +211,25 @@ class CommunityController extends Controller
         ]);
     
         $post = Post::find($postId);
-    
-        if ($post && $post->user_id !== Auth::id()) {
+        if ($post->user_id !== Auth::id()) {
             $notificationData = [
                 'postId' => $postId,
                 'message' => Auth::user()->name . ' liked your post',
+                'post_id' => $postId,
             ];
-    
             $this->sendNotificationToUser($request, 'like', $post->user_id, $notificationData);
     
             Notification::create([
                 'user_id' => $post->user_id,
                 'type' => 'like',
-                'title' => 'Your post was liked',
-                'data' => $notificationData['message'],
-                'read' => false,
+                'title' => $notificationData['message'],
+                'data' => json_encode($notificationData),
             ]);
         }
     
         return response()->json($like, 200);
     }
+    
     
 
 

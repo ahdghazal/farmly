@@ -31,8 +31,15 @@ class NotificationController extends Controller
             return response()->json(['message' => 'No notifications found'], 404);
         }
     
-        return response()->json($notifications, 200);
+        $notificationsWithPostId = $notifications->map(function ($notification) {
+            $data = json_decode($notification->data, true);
+            $notification->post_id = $data['post_id'] ?? null;
+            return $notification;
+        });
+    
+        return response()->json($notificationsWithPostId, 200);
     }
+    
 
     public function createNotification(Request $request)
     {
