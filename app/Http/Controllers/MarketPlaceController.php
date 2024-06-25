@@ -152,10 +152,6 @@ class MarketPlaceController extends Controller
          $directory = 'productPictures/';
          $filePath = $directory . $fileName;
  
-         if (!file_exists($directory)) {
-             mkdir($directory, 0775, true);
-         }
- 
          if (file_put_contents($filePath, $decodedImage) === false) {
              throw new Exception("Failed to save the file.");
          }
