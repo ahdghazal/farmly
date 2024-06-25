@@ -166,51 +166,72 @@ class CommunityController extends Controller
     
 
     public function replyToPost(Request $request, $postId)
-{
-    $request->validate([
-        'content' => 'required|string',
-    ]);
-
-    $reply = Reply::create([
-        'user_id' => Auth::id(),
-        'post_id' => $postId,
-        'content' => $request->input('content'),
-    ]);
-
-    $post = Post::find($postId);
-    if ($post && $post->user_id !== Auth::id()) {
-        $this->sendNotificationToUser($request, 'reply', $post->user_id, [
-            'postId' => $postId,
-            'postTitle' => $post->title,
-            'message' => Auth::user()->name . ' replied to your post',
-            'post_id' => $postId, // Include post_id in the message data
+    {
+        $request->validate([
+            'content' => 'required|string',
         ]);
-    }
-
-    return response()->json($reply->load('user'), 201);
-}
-
-
-
-
-public function likePost(Request $request, $postId)
-{
-    $like = Like::firstOrCreate([
-        'user_id' => Auth::id(),
-        'post_id' => $postId,
-    ]);
-
-    $post = Post::find($postId);
-    if ($post->user_id !== Auth::id()) {
-        $this->sendNotificationToUser($request, 'like', $post->user_id, [
-            'postId' => $postId,
-            'message' => Auth::user()->name . ' liked your post',
-            'post_id' => $postId, // Include post_id in the message data
+    
+        $reply = Reply::create([
+            'user_id' => Auth::id(),
+            'post_id' => $postId,
+            'content' => $request->input('content'),
         ]);
+    
+        $post = Post::find($postId);
+        if ($post && $post->user_id !== Auth::id()) {
+            $notificationData = [
+                'postId' => $postId,
+                'postTitle' => $post->title,
+                'message' => Auth::user()->name . ' replied to your post',
+            ];
+    
+            $this->sendNotificationToUser($request, 'reply', $post->user_id, $notificationData);
+    
+            Notification::create([
+                'user_id' => $post->user_id,
+                'type' => 'reply',
+                'title' => 'New reply to your post',
+                'body' => $notificationData['message'],
+                'read' => false,
+            ]);
+        }
+    
+        return response()->json($reply->load('user'), 201);
     }
+    
 
-    return response()->json($like, 200);
-}
+
+
+
+    public function likePost(Request $request, $postId)
+    {
+        $like = Like::firstOrCreate([
+            'user_id' => Auth::id(),
+            'post_id' => $postId,
+        ]);
+    
+        $post = Post::find($postId);
+    
+        if ($post && $post->user_id !== Auth::id()) {
+            $notificationData = [
+                'postId' => $postId,
+                'message' => Auth::user()->name . ' liked your post',
+            ];
+    
+            $this->sendNotificationToUser($request, 'like', $post->user_id, $notificationData);
+    
+            Notification::create([
+                'user_id' => $post->user_id,
+                'type' => 'like',
+                'title' => 'Your post was liked',
+                'body' => $notificationData['message'],
+                'read' => false,
+            ]);
+        }
+    
+        return response()->json($like, 200);
+    }
+    
 
 
     public function unlikePost($postId)

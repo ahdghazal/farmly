@@ -16,6 +16,8 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MarketPlaceController;
+
 use Pusher\Pusher;
 /*
 |--------------------------------------------------------------------------
@@ -123,6 +125,17 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
     //homepage
     Route::get('/getAnnouncements', [AdminController::class, 'getAllAnnouncements']);//done
+
+
+    // Market Place Routes
+    Route::post('/products', [MarketPlaceController::class, 'addProduct']);
+    Route::put('/products/{id}', [MarketPlaceController::class, 'updateProduct']);
+    Route::delete('/products/{id}', [MarketPlaceController::class, 'deleteProduct']);
+    Route::get('/my-products', [MarketPlaceController::class, 'showMyProducts']);
+    Route::put('/products/{id}/confirm-sold', [MarketPlaceController::class, 'confirmProductSold']);
+    Route::get('/products/{id}', [MarketPlaceController::class, 'showProduct']);
+    Route::get('/products', [MarketPlaceController::class, 'showAllProducts']);
+    Route::get('/search-products', [MarketPlaceController::class, 'searchProducts']);
 
 });
 
