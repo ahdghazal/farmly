@@ -117,8 +117,7 @@ class ReminderController extends Controller
         $nextReminderDate = $lastReminder->created_at->addDays($interval);
     }
 
-    if (!$lastReminder->task_done) {
-        // Reschedule reminder in 6 hours if the task was not done
+    if ($lastReminder&&!$lastReminder->task_done) {
         $this->rescheduleReminder($lastReminder, 6);
     } else if (now()->greaterThanOrEqualTo($nextReminderDate)) {
         $this->sendReminder($user, $plantEntry->plant, $taskType);
