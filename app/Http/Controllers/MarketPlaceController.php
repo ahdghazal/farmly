@@ -116,4 +116,51 @@ class MarketPlaceController extends Controller
 
         return response()->json(['message' => 'Product sale status updated successfully!', 'is_sold' => $product->is_sold]);
     }
+
+
+ public function uploadProductPicture(Request $request)
+ {
+     $validator = Validator::make($request->all(), [
+         'picture' => 'required|string',
+         'picture_name' => 'required|string',
+     ]);
+
+     if ($validator->fails()) {
+         return response()->json(['errors' => $validator->errors()], 422);
+     }
+
+     $encodedPicture = $request->picture;
+     $category = $request->category;
+     $userId = auth()->id();
+
+     $filePath = $this->saveBase64ImageProduct($encodedPicture, $userId);
+
+     return response()->json(['picture_path' => $filePath], 201);
+ }
+
+ private function saveBase64ImageProduct($imageData, $userId)
+ {
+     try {
+         $decodedImage = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageData));
+ 
+         $fileName = $userId . '_' . time() . '_' . uniqid() . '.png';
+ 
+         $directory = 'productPictures/';
+         $filePath = $directory . $fileName;
+ 
+         if (!file_exists($directory)) {
+             mkdir($directory, 0775, true);
+         }
+ 
+         if (file_put_contents($filePath, $decodedImage) === false) {
+             throw new Exception("Failed to save the file.");
+         }
+ 
+         return $filePath;
+     } catch (Exception $e) {
+         Log::error('Failed to save image: ' . $e->getMessage());
+         return response()->json(['error' => 'Failed to save image.'], 500);
+     }
+ }
+ 
 }
