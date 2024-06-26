@@ -12,7 +12,6 @@ use App\Models\User;
 
 class MarketPlaceController extends Controller
 {
-    // Add a new product
     public function addProduct(Request $request)
     {
         $request->validate([
@@ -20,6 +19,7 @@ class MarketPlaceController extends Controller
             'price' => 'required|numeric',
             'description' => 'required|string',
             'picture' => 'nullable',
+            'phone_number' => 'nullable|string|max:20',
         ]);
 
         $product = new Product([
@@ -28,7 +28,8 @@ class MarketPlaceController extends Controller
             'price' => $request->price,
             'description' => $request->description,
             'email' => Auth::user()->email,
-            'picture' => $request->picture
+            'picture' => $request->picture,
+            'phone_number' => $request->phone_number,
         ]);
 
         $product->save();
@@ -36,7 +37,6 @@ class MarketPlaceController extends Controller
         return response()->json(['message' => 'Product added successfully!', 'product' => $product]);
     }
 
-    // Update a product
     public function updateProduct(Request $request, $id)
     {
         $request->validate([
@@ -44,6 +44,7 @@ class MarketPlaceController extends Controller
             'price' => 'required|numeric',
             'description' => 'required|string',
             'picture' => 'nullable',
+            'phone_number' => 'nullable|string|max:20',
         ]);
 
         $product = Product::findOrFail($id);
@@ -56,6 +57,7 @@ class MarketPlaceController extends Controller
         $product->price = $request->price;
         $product->description = $request->description;
         $product->picture = $request->picture;
+        $product->phone_number = $request->phone_number;
         
 
         $product->save();
@@ -63,7 +65,6 @@ class MarketPlaceController extends Controller
         return response()->json(['message' => 'Product updated successfully!', 'product' => $product]);
     }
 
-    // Delete a product
     public function deleteProduct($id)
     {
         $product = Product::findOrFail($id);
@@ -77,19 +78,34 @@ class MarketPlaceController extends Controller
         return response()->json(['message' => 'Product deleted successfully!']);
     }
 
-    // Show authenticated user's products
     public function showMyProducts()
     {
         $products = Auth::user()->products;
         return response()->json($products);
     }
 
-    // Show a single product
     public function showProduct($id)
     {
-        $product = Product::findOrFail($id);
-        return response()->json($product);
+        $product = Product::with('user')->findOrFail($id);
+    
+        $response = [
+            'id' => $product->id,
+            'name' => $product->name,
+            'price' => $product->price,
+            'description' => $product->description,
+            'email' => $product->email,
+            'picture' => $product->picture,
+            'phone_number' => $product->phone_number,
+            'is_sold' => $product->is_sold,
+            'created_at' => $product->created_at,
+            'updated_at' => $product->updated_at,
+            'user_id' => $product->user->id,
+            'user_name' => $product->user->name,
+        ];
+    
+        return response()->json($response);
     }
+    
 
     // Show all products
     public function showAllProducts()
