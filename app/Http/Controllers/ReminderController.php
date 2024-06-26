@@ -207,48 +207,58 @@ class ReminderController extends Controller
         return response()->json($pendingReminders, 200);
     }
 
-    /**
-     * Get garden plants needs.
-     *
-     * @param int $gardenId
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getGardenPlantsNeeds($gardenId)
-    {
-        $garden = Garden::findOrFail($gardenId);
-    
-        $waterNeeds = [];
-        $pruneNeeds = [];
-    
-        foreach ($garden->plantEntries as $plantEntry) {
-            $plant = $plantEntry->plant;
-    
-            $waterNeed = strtolower($plant->water_need);
-            $pruneNeed = strtolower($plant->pruning);
-    
-            if ($waterNeed === 'high' || $waterNeed === 'moderate' || $waterNeed === 'low') {
-                $waterNeeds[] = $plant;
-            }
-    
-            if ($pruneNeed === 'annually' || $pruneNeed === 'regularly' || $pruneNeed === 'weekly') {
-                $pruneNeeds[] = $plant;
-            }
+/**
+ * Get garden plants needs.
+ *
+ * @param int $gardenId
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function getGardenPlantsNeeds($gardenId)
+{
+    $garden = Garden::findOrFail($gardenId);
+
+    $waterReminders = Reminder::where('garden_id', $gardenId)
+        ->where('task_done', false)
+        ->where('task_type', 'water')
+        ->get()
+        ->pluck('garden_plant_entry_id');
+
+    $pruneReminders = Reminder::where('garden_id', $gardenId)
+        ->where('task_done', false)
+        ->where('task_type', 'prune')
+        ->get()
+        ->pluck('garden_plant_entry_id');
+
+    $waterNeeds = [];
+    $pruneNeeds = [];
+
+    foreach ($garden->plantEntries as $plantEntry) {
+        $plant = $plantEntry->plant;
+
+        if ($waterReminders->contains($plantEntry->id)) {
+            $waterNeeds[] = $plant;
         }
-    
-        $waterNeedsCount = count($waterNeeds);
-        $pruneNeedsCount = count($pruneNeeds);
-    
-        return response()->json([
-            'water_needs' => [
-                'plants' => $waterNeeds,
-                'count' => $waterNeedsCount,
-            ],
-            'prune_needs' => [
-                'plants' => $pruneNeeds,
-                'count' => $pruneNeedsCount,
-            ],
-        ], 200);
+
+        if ($pruneReminders->contains($plantEntry->id)) {
+            $pruneNeeds[] = $plant;
+        }
     }
+
+    $waterNeedsCount = count($waterNeeds);
+    $pruneNeedsCount = count($pruneNeeds);
+
+    return response()->json([
+        'water_needs' => [
+            'plants' => $waterNeeds,
+            'count' => $waterNeedsCount,
+        ],
+        'prune_needs' => [
+            'plants' => $pruneNeeds,
+            'count' => $pruneNeedsCount,
+        ],
+    ], 200);
+}
+
     
 
     /**
