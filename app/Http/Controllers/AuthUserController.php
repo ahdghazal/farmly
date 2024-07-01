@@ -232,11 +232,13 @@ function login(Request $request)
 
 
 
-function logout(Request $request)
+public function logout(Request $request)
 {
     try {
         $user = auth()->user();
         if ($user) {
+            $this->deleteFcmToken($user);
+
             $user->tokens()->delete();
             $response = ['message' => 'Logged out'];
             return response()->json($response, 200);
@@ -249,6 +251,15 @@ function logout(Request $request)
         return response()->json($response, 500);
     }
 }
+
+protected function deleteFcmToken($user)
+{
+    $user->fcm_token = null;
+    $user->save();
+
+    return response()->json(['message' => 'FCM token deleted successfully']);
+}
+
 //done
 
 

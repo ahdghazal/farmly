@@ -12,6 +12,7 @@ class Reminder extends Model
         'garden_plant_entry_id',
         'task_type',
         'task_done',
+        'created_at',
     ];
 
     public function user()

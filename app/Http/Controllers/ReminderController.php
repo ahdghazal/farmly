@@ -117,7 +117,7 @@ class ReminderController extends Controller
         $nextReminderDate = $lastReminder->created_at->addDays($interval);
     }
 
-    if ($lastReminder&&!$lastReminder->task_done) {
+    if ($lastReminder&&!$lastReminder->task_done&&now()->greaterThanOrEqualTo($lastReminder->created_at->addHours(6))) {
         $this->rescheduleReminder($lastReminder, 6);
     } else if (now()->greaterThanOrEqualTo($nextReminderDate)) {
         $this->sendReminder($user, $plantEntry->plant, $taskType);
@@ -189,6 +189,9 @@ class ReminderController extends Controller
             'task_done' => false,
             'created_at' => now()->addHours($hours),
         ]);
+        // error_log ("Hello".now());
+        // error_log ("Hello".now()->addHours($hours));
+
     }
 
     /**
