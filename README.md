@@ -1,4 +1,6 @@
-# Farmly Project
+![image](https://github.com/ahdghazal/farmly/assets/111571170/f5845639-24b9-4cbf-bbf3-d80399806b74)
+
+# Farmly App
 
 ## Abstract
 
@@ -10,13 +12,8 @@ Farmly is a mobile application designed to mainly solve the problem of the lack 
 
 In the backend development of our software project, we have implemented the Model-View-Controller (MVC) architecture. This approach has helped us create a well-organized and modular structure for our backend codebase. The model component is responsible for encapsulating the data and business logic, ensuring proper data handling and manipulation.
 
-### Frontend Architecture
-
-In the front-end development of our software project, we have implemented a component-based architecture. This approach involves breaking down the user interface into smaller, self-contained components. Each component contains its own logic, styles, and functionality, which makes it easier to develop, maintain, and test. These components can be reused across different parts of the application, thereby improving efficiency and maintaining design consistency.
 
 ## Programming Languages, Frameworks, and Other Services
-
-In the implementation of both the mobile application and the website for this project, Flutter was employed as the frontend framework. Flutter is an open-source framework developed and supported by Google, it’s commonly used by developers to build an application’s user interface (UI) for multiple platforms with a single codebase, and also for websites’ frontend development.
 
 Laravel was our choice for backend development because it's a strong framework that comes with built-in tools for handling web and mobile applications' features for routing, authentication, and database management. Laravel's clear syntax and extensive documentation make development faster and improve the quality of the work. Plus, there's a large community of Laravel users who share resources and offer support.
 
@@ -27,6 +24,8 @@ To manage our project's database, MySQL was the best option because it's open-so
 For our real-time features like notifications and reminders, Firebase was our choice because it offers services including authentication, real-time communication, cloud storage, and notifications. It simplifies the development process with available SDKs, making it ideal for our mobile application.
 
 The design and structure of a database system based on the provided schema. The schema consists of several tables and data types representing various entities and their relationships. The proposed database will efficiently store and manage data related to users, plants, gardens, posts, replies, likes, announcements, conversations, reminders, notifications, and products.
+
+![image](https://github.com/ahdghazal/farmly/assets/111571170/9af7298c-8f1b-4184-82f4-5aeebb6b4a1f)
 
 ## Features
 
@@ -47,7 +46,6 @@ The design and structure of a database system based on the provided schema. The 
 ## Tools Used
 
 - **Visual Studio Code:** It was used as the primary Integrated Development Environment (IDE), for coding, editing, and debugging purposes.
-- **Android Studio:** It was utilized as an emulator to simulate and test the mobile application across a range of virtual environments.
 - **GitHub:** Collaboration and version control were facilitated through GitHub, which allowed work organization for us and efficient tracking of code modifications. Also, it was essential for deploying the continuous changes we were making on our server-side to our Amazon server instance and database.
 - **Firebase:** For features like real-time reminders and notifications.
 - **Pusher:** Which is a simple, scalable and reliable hosted realtime API that we used for chatting.
@@ -61,3 +59,48 @@ The design and structure of a database system based on the provided schema. The 
 - **Plant.id API:** For plants and disease identification.
 - **IP Geolocation:** For reaching the location of the users.
 
+  
+### Prerequisites
+
+- PHP >= 7.3
+- Composer
+- MySQL
+
+### Backend Installation
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/your-username/farmly-backend.git
+   cd farmly-backend
+   ```
+
+2. **Install dependencies:**
+    ```bash
+    composer install
+    npm install
+    ```
+
+3. **Environment setup:**
+   Copy the .env.example file to .env and update the environment variables with your configuration.
+    ```bash
+    cp .env.example .env
+    ```
+    Update your .env file with your database credentials, mail settings, and other configurations.
+
+4. **Generate application key:**
+   ```bash
+   php artisan key:generate
+   ```
+5. **Run migrations:**
+   ```bash
+   php artisan migrate
+   ```
+6. **Seed the database:**
+   ```bash
+   php artisan db:seed
+   ```
+7. **Serve the application:**
+   ```bash
+   php artisan serve
+   ```
